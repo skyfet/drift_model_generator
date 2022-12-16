@@ -1,0 +1,13 @@
+builders:
+  # name of the builder
+  model_based_drift_class:
+    import: "package:drift_model_generator/src/builder.dart"
+    # Name of the function in the above library to call.
+    builder_factories: ["driftClassBuilder"]
+    # The mapping from the source extension to the generated file extension
+    build_extensions: {".dart": [".drift.dart"]}
+    # Will automatically run on any package that depends on it
+    auto_apply: dependents
+    # Generate the output directly into the package, not to a hidden cache dir
+    build_to: source
+    runs_before: [drift_dev:drift_dev]
