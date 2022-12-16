@@ -65,7 +65,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         : annotation.read('driftConstructor').stringValue;
 
     final excludeFields = annotation
-        .read('exludeFields')
+        .read('excludeFields')
         .setValue
         .map((ex) => ex.toStringValue()!);
 
@@ -99,7 +99,10 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
               : element.fields);
 
       final primaryKeys = _readPrimaries(variables);
-      final allReferences = _readReferences(variables).toList();
+      final allReferences = _readReferences(
+        variables: variables,
+        excludeFields: excludeFields.toList(),
+      ).toList();
       if (autoReferenceEnums) {
         allReferences.addAll(
           _autoReference(
@@ -348,9 +351,10 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     return uniques;
   }
 
-  Iterable<Reference> _readReferences(
-    Iterable<VariableElement> variables,
-  ) sync* {
+  Iterable<Reference> _readReferences({
+    required Iterable<VariableElement> variables,
+    required List<String> excludeFields,
+  }) sync* {
     for (var variable in variables) {
       final fieldClassAnnotation = variable.type.element != null &&
               TypeChecker.fromRuntime(UseDrift)
@@ -404,7 +408,9 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         toDriftClass: targetClassName,
       );
 
-      if (variable.source != null && fromFields.length == 1) {
+      if (variable.source != null &&
+          fromFields.length == 1 &&
+          !excludeFields.contains(variable.name)) {
         additionalImports.add(
           variable.type.element!.source!.uri
               .toString()

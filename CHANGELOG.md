@@ -1,3 +1,8 @@
+## 0.2.0
+
+- BREAKING: fix `exludeFields` > `excludeFields`
+- FIX: do not import excluded fields related classes
+
 ## 0.1.2
 
 - FIX: add import only for single relation

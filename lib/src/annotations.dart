@@ -26,7 +26,7 @@ class UseDrift {
   final bool autoReferenceEnums;
 
   /// List of fields that must be exluded from drift model.
-  final Set<String> exludeFields;
+  final Set<String> excludeFields;
 
   /// When use this annotation on [Enum]s, this name will
   /// be used as primary key.
@@ -41,7 +41,7 @@ class UseDrift {
   const UseDrift({
     this.useSnakeCase = true,
     this.enumFieldName = 'name',
-    this.exludeFields = const {},
+    this.excludeFields = const {},
     this.autoReferenceEnums = true,
     this.driftClassName,
     this.driftConstructor,
