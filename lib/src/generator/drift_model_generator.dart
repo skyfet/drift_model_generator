@@ -41,6 +41,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     final buffer = StringBuffer();
     final modelName = element.name!;
     final useSnakeCase = annotation.read('useSnakeCase').boolValue;
+    final autoReferenceEnums = annotation.read('autoReferenceEnums').boolValue;
 
     final driftClassName = annotation.read('driftClassName').isNull
         ? null
@@ -98,6 +99,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         buffer,
         allReferences,
         uniqueKeys,
+        autoReferenceEnums,
       );
 
       if (primaryKeys.isNotEmpty) {
@@ -149,21 +151,22 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
   }
 
   void _mapVariables(
-    Iterable<VariableElement> fields,
+    Iterable<VariableElement> variables,
     Iterable<String> excludeFields,
     bool hasAnyAutoIncremented,
     Iterable<String> primaryKeys,
     StringBuffer buffer,
     Iterable<Reference> allReferences,
     List<Unique> uniqueKeys,
+    bool autoReferenceEnums,
   ) {
-    for (var field in fields) {
-      if (excludeFields.contains(field.name)) {
+    for (var variable in variables) {
+      if (excludeFields.contains(variable.name)) {
         continue;
       }
 
       final annotations = TypeChecker.fromRuntime(FieldAnnotation)
-          .annotationsOf(field)
+          .annotationsOf(variable)
           .map(ConstantReader.new);
 
       final isAutoIncremented = annotations.whereOf<AutoIncrement>().isNotEmpty;
@@ -172,7 +175,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
 
       // TODO: fix when auto incremented after primary
       final isPrimary =
-          !hasAnyAutoIncremented && primaryKeys.contains(field.name);
+          !hasAnyAutoIncremented && primaryKeys.contains(variable.name);
 
       dynamic defaultValue;
       // ignore default value then this field auto incremented
@@ -185,11 +188,11 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
           !isPrimary &&
           annotations.whereOf<Nullable>().isNotEmpty;
 
-      final driftType = DriftType.fromDartType(field.type);
+      final driftType = DriftType.fromDartType(variable.type);
       buffer
         ..writeln(driftType.columnType)
         ..write(' get ')
-        ..write(field.name)
+        ..write(variable.name)
         ..write(' => ')
         ..write(driftType.builderName)
         ..write('()');
@@ -213,13 +216,41 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
           ..write(')');
       }
 
-      final references = allReferences.where(
-        (ref) => ref.fromFields.contains(field.name) && ref.single,
-      );
+      final references = allReferences
+          .where(
+            (ref) => ref.fromFields.contains(variable.name) && ref.single,
+          )
+          .toList();
+
+      if (autoReferenceEnums && variable.type.element is EnumElement) {
+        final targetEnum = variable.type.element as EnumElement;
+        final annotations =
+            TypeChecker.fromRuntime(UseDrift).annotationsOf(targetEnum);
+        if (annotations.isNotEmpty) {
+          final annotation = ConstantReader(annotations.single);
+
+          final targetDriftClassName =
+              (annotation.read('driftClassName').isNull)
+                  ? null
+                  : annotation.read('driftClassName').stringValue;
+
+          final targetClassName =
+              (targetDriftClassName ?? '${targetEnum.name}s');
+
+          final enumFieldName = annotation.read('enumFieldName').stringValue;
+          references.add(
+            Reference(
+              fromFields: [variable.name],
+              toFields: [enumFieldName],
+              toDriftClass: targetClassName,
+            ),
+          );
+        }
+      }
 
       if (references.isNotEmpty) {
         for (var reference in references) {
-          final fieldIndex = reference.fromFields.indexOf(field.name);
+          final fieldIndex = reference.fromFields.indexOf(variable.name);
           buffer
             ..write('.references(')
             ..write(reference.toDriftClass)
@@ -230,7 +261,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       }
 
       final uniqueKeyIndex = uniqueKeys.indexWhere(
-        (u) => u.fields.contains(field.name) && u.single,
+        (u) => u.fields.contains(variable.name) && u.single,
       );
       if (uniqueKeyIndex > -1) {
         buffer.write('.unique()');
@@ -243,37 +274,6 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       buffer.write('();');
     }
   }
-
-  // List<Reference> _readReferences(List<VariableElement> fields) {
-  //   final refs = <Reference>[];
-  //   for (var i = 0; i < fields.length; i++) {
-  //     final referencesAnnotations = TypeChecker.fromRuntime(References)
-  //         .annotationsOf(fields[i])
-  //         .map(ConstantReader.new);
-  //     if (referencesAnnotations.isNotEmpty) {
-  //       final ann = referencesAnnotations.single;
-  //       final driftClass = ann.read('driftClassName').stringValue;
-  //       final keyIdConst = ann.read('keyId');
-  //       final keyId =
-  //           keyIdConst.isNull ? fields[i].name : keyIdConst.stringValue;
-
-  //       final fromField = fields[i].name;
-  //       final toField = ann.read('field').stringValue;
-  //       final refIndex = refs.indexWhere((r) => r.toDriftClass == driftClass);
-  //       if (refIndex == -1) {
-  //         refs.add(Reference(
-  //             fromFields: [fromField],
-  //             toFields: [toField],
-  //             toDriftClass: driftClass));
-  //       } else {
-  //         refs[refIndex].fromFields.add(fromField);
-  //         refs[refIndex].toFields.add(toField);
-  //       }
-  //     }
-  //   }
-
-  //   return refs;
-  // }
 
   Iterable<String> _readPrimaries(Iterable<VariableElement> fields) sync* {
     for (var i = 0; i < fields.length; i++) {
@@ -348,7 +348,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
               ? null
               : fieldClassAnnotation!.read('driftClassName').stringValue;
 
-      var targetTableName =
+      var targetClassName =
           (targetDriftClassName ?? '${field.type.element!.name}s');
 
       yield Reference(
@@ -360,7 +360,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
                 .listValue
                 .map((field) => ConstantReader(field).stringValue)
                 .toList(),
-        toDriftClass: targetTableName,
+        toDriftClass: targetClassName,
       );
     }
   }

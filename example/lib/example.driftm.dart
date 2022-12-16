@@ -11,7 +11,7 @@ import 'package:example/example.dart';
 class AccountDetails extends Table {
   IntColumn get accountDetailId => integer().autoIncrement()();
   TextColumn get accountNumber => text()();
-  TextColumn get accountType => text()();
+  TextColumn get accountType => text().references(AccountTypes, #name)();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   IntColumn get entityId => integer()();
   IntColumn get conglomerateId => integer()();

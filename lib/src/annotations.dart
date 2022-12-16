@@ -22,6 +22,9 @@ class UseDrift {
   /// All generated sql code must use snake case naming in fields and tables names.
   final bool useSnakeCase;
 
+  /// Whether to automatically create a foreign key constraint on an enum value.
+  final bool autoReferenceEnums;
+
   /// List of fields that must be exluded from drift model.
   final Set<String> exludeFields;
 
@@ -39,6 +42,7 @@ class UseDrift {
     this.useSnakeCase = true,
     this.enumFieldName = 'name',
     this.exludeFields = const {},
+    this.autoReferenceEnums = true,
     this.driftClassName,
     this.driftConstructor,
   });

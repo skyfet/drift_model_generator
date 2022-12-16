@@ -1,3 +1,7 @@
+## 0.1.0
+
+- FEAT: add `autoReferenceEnums` for `@UseDrift`, all enums can be automaticly referenced
+
 ## 0.0.3
 
 - FEAT: add support for classes without fields, using main constructor

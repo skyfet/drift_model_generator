@@ -3,6 +3,144 @@
 part of 'drift_db.dart';
 
 // ignore_for_file: type=lint
+class AccountType extends DataClass implements Insertable<AccountType> {
+  final String name;
+  const AccountType({required this.name});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    return map;
+  }
+
+  AccountTypesCompanion toCompanion(bool nullToAbsent) {
+    return AccountTypesCompanion(
+      name: Value(name),
+    );
+  }
+
+  factory AccountType.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountType(
+      name: serializer.fromJson<String>(json['name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+    };
+  }
+
+  AccountType copyWith({String? name}) => AccountType(
+        name: name ?? this.name,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('AccountType(')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => name.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountType && other.name == this.name);
+}
+
+class AccountTypesCompanion extends UpdateCompanion<AccountType> {
+  final Value<String> name;
+  const AccountTypesCompanion({
+    this.name = const Value.absent(),
+  });
+  AccountTypesCompanion.insert({
+    required String name,
+  }) : name = Value(name);
+  static Insertable<AccountType> custom({
+    Expression<String>? name,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+    });
+  }
+
+  AccountTypesCompanion copyWith({Value<String>? name}) {
+    return AccountTypesCompanion(
+      name: name ?? this.name,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountTypesCompanion(')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AccountTypesTable extends AccountTypes
+    with TableInfo<$AccountTypesTable, AccountType> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountTypesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [name];
+  @override
+  String get aliasedName => _alias ?? 'account_types';
+  @override
+  String get actualTableName => 'account_types';
+  @override
+  VerificationContext validateIntegrity(Insertable<AccountType> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  AccountType map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountType(
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+    );
+  }
+
+  @override
+  $AccountTypesTable createAlias(String alias) {
+    return $AccountTypesTable(attachedDatabase, alias);
+  }
+}
+
 class AccountDetailsCompanion extends UpdateCompanion<AccountDetail> {
   final Value<int> accountDetailId;
   final Value<String> accountNumber;
@@ -140,7 +278,10 @@ class $AccountDetailsTable extends AccountDetails
   @override
   late final GeneratedColumn<String> accountType = GeneratedColumn<String>(
       'account_type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES account_types (name)'));
   static const VerificationMeta _isDefaultMeta =
       const VerificationMeta('isDefault');
   @override
@@ -409,153 +550,15 @@ class $EntitiesTable extends Entities with TableInfo<$EntitiesTable, Entity> {
   }
 }
 
-class AccountType extends DataClass implements Insertable<AccountType> {
-  final String name;
-  const AccountType({required this.name});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['name'] = Variable<String>(name);
-    return map;
-  }
-
-  AccountTypesCompanion toCompanion(bool nullToAbsent) {
-    return AccountTypesCompanion(
-      name: Value(name),
-    );
-  }
-
-  factory AccountType.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return AccountType(
-      name: serializer.fromJson<String>(json['name']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'name': serializer.toJson<String>(name),
-    };
-  }
-
-  AccountType copyWith({String? name}) => AccountType(
-        name: name ?? this.name,
-      );
-  @override
-  String toString() {
-    return (StringBuffer('AccountType(')
-          ..write('name: $name')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => name.hashCode;
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is AccountType && other.name == this.name);
-}
-
-class AccountTypesCompanion extends UpdateCompanion<AccountType> {
-  final Value<String> name;
-  const AccountTypesCompanion({
-    this.name = const Value.absent(),
-  });
-  AccountTypesCompanion.insert({
-    required String name,
-  }) : name = Value(name);
-  static Insertable<AccountType> custom({
-    Expression<String>? name,
-  }) {
-    return RawValuesInsertable({
-      if (name != null) 'name': name,
-    });
-  }
-
-  AccountTypesCompanion copyWith({Value<String>? name}) {
-    return AccountTypesCompanion(
-      name: name ?? this.name,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AccountTypesCompanion(')
-          ..write('name: $name')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $AccountTypesTable extends AccountTypes
-    with TableInfo<$AccountTypesTable, AccountType> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $AccountTypesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  @override
-  List<GeneratedColumn> get $columns => [name];
-  @override
-  String get aliasedName => _alias ?? 'account_types';
-  @override
-  String get actualTableName => 'account_types';
-  @override
-  VerificationContext validateIntegrity(Insertable<AccountType> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('name')) {
-      context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {name};
-  @override
-  AccountType map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return AccountType(
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-    );
-  }
-
-  @override
-  $AccountTypesTable createAlias(String alias) {
-    return $AccountTypesTable(attachedDatabase, alias);
-  }
-}
-
 abstract class _$ExampleDatabase extends GeneratedDatabase {
   _$ExampleDatabase(QueryExecutor e) : super(e);
+  late final $AccountTypesTable accountTypes = $AccountTypesTable(this);
   late final $AccountDetailsTable accountDetails = $AccountDetailsTable(this);
   late final $EntitiesTable entities = $EntitiesTable(this);
-  late final $AccountTypesTable accountTypes = $AccountTypesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [accountDetails, entities, accountTypes];
+      [accountTypes, accountDetails, entities];
 }
