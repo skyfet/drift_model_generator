@@ -1,69 +1,49 @@
 import 'package:drift_model_generator/drift_model_generator.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'example.freezed.dart';
+import 'package:example/models/entity.dart';
 
 @UseDrift(
-  useSnakeCase: false,
   exludeFields: {'fiName', 'entity'},
   driftConstructor: 'fromDb',
 )
-class AccountDetail {
-  const AccountDetail({
-    required this.accountDetailId,
-    required this.accountNumber,
-    required this.accountType,
+class Example {
+  const Example({
+    required this.exampleId,
+    required this.exampleType,
     required this.isDefault,
     required this.entityId,
-    required this.conglomerateId,
     required this.createdAt,
-    this.fiName,
+    this.exampleNumber,
     this.entity,
   });
   @autoIncrement
-  final int accountDetailId;
-  final String accountNumber;
-  final AccountType accountType;
+  final int exampleId;
+  @nullable
+  final String? exampleNumber;
+  final ExampleType exampleType;
 
   @WithDefault(false)
   final bool isDefault;
 
   final int entityId;
-  final int conglomerateId;
-
-  @nullable
-  final String? fiName;
 
   @WithDefault('now()')
   final DateTime createdAt;
 
-  @ReferencedBy(['entityId', 'conglomerateId'])
+  @ReferencedBy(['entityId'])
   final Entity? entity;
 
-  AccountDetail.fromDb({
-    required this.accountDetailId,
-    required this.accountNumber,
-    required String accountType,
+  Example.fromDb({
+    required this.exampleId,
+    required this.exampleNumber,
+    required String exampleType,
     required this.isDefault,
     required this.entityId,
-    required this.conglomerateId,
     required this.createdAt,
-    this.fiName,
     this.entity,
-  }) : accountType = AccountType.values.firstWhere(
-          (at) => at.snakeName == accountType,
+  }) : exampleType = ExampleType.values.firstWhere(
+          (at) => at.snakeName == exampleType,
         );
 }
 
-@freezed
-@UseDrift(driftClassName: 'Entities')
-class Entity with _$Entity {
-  const factory Entity({
-    required int entityId,
-    required int conglomerateId,
-    required String name,
-  }) = _Entity;
-}
-
 @useDrift
-enum AccountType { cash, card, electronic, blockchainAddress }
+enum ExampleType { cash, card, electronic, blockchainAddress }

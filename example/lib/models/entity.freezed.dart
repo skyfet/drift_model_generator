@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'example.dart';
+part of 'entity.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -17,7 +17,6 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$Entity {
   int get entityId => throw _privateConstructorUsedError;
-  int get conglomerateId => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -29,7 +28,7 @@ abstract class $EntityCopyWith<$Res> {
   factory $EntityCopyWith(Entity value, $Res Function(Entity) then) =
       _$EntityCopyWithImpl<$Res, Entity>;
   @useResult
-  $Res call({int entityId, int conglomerateId, String name});
+  $Res call({int entityId, String name});
 }
 
 /// @nodoc
@@ -46,17 +45,12 @@ class _$EntityCopyWithImpl<$Res, $Val extends Entity>
   @override
   $Res call({
     Object? entityId = null,
-    Object? conglomerateId = null,
     Object? name = null,
   }) {
     return _then(_value.copyWith(
       entityId: null == entityId
           ? _value.entityId
           : entityId // ignore: cast_nullable_to_non_nullable
-              as int,
-      conglomerateId: null == conglomerateId
-          ? _value.conglomerateId
-          : conglomerateId // ignore: cast_nullable_to_non_nullable
               as int,
       name: null == name
           ? _value.name
@@ -72,7 +66,7 @@ abstract class _$$_EntityCopyWith<$Res> implements $EntityCopyWith<$Res> {
       __$$_EntityCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int entityId, int conglomerateId, String name});
+  $Res call({int entityId, String name});
 }
 
 /// @nodoc
@@ -86,17 +80,12 @@ class __$$_EntityCopyWithImpl<$Res>
   @override
   $Res call({
     Object? entityId = null,
-    Object? conglomerateId = null,
     Object? name = null,
   }) {
     return _then(_$_Entity(
       entityId: null == entityId
           ? _value.entityId
           : entityId // ignore: cast_nullable_to_non_nullable
-              as int,
-      conglomerateId: null == conglomerateId
-          ? _value.conglomerateId
-          : conglomerateId // ignore: cast_nullable_to_non_nullable
               as int,
       name: null == name
           ? _value.name
@@ -109,21 +98,16 @@ class __$$_EntityCopyWithImpl<$Res>
 /// @nodoc
 
 class _$_Entity implements _Entity {
-  const _$_Entity(
-      {required this.entityId,
-      required this.conglomerateId,
-      required this.name});
+  const _$_Entity({required this.entityId, required this.name});
 
   @override
   final int entityId;
-  @override
-  final int conglomerateId;
   @override
   final String name;
 
   @override
   String toString() {
-    return 'Entity(entityId: $entityId, conglomerateId: $conglomerateId, name: $name)';
+    return 'Entity(entityId: $entityId, name: $name)';
   }
 
   @override
@@ -133,13 +117,11 @@ class _$_Entity implements _Entity {
             other is _$_Entity &&
             (identical(other.entityId, entityId) ||
                 other.entityId == entityId) &&
-            (identical(other.conglomerateId, conglomerateId) ||
-                other.conglomerateId == conglomerateId) &&
             (identical(other.name, name) || other.name == name));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, entityId, conglomerateId, name);
+  int get hashCode => Object.hash(runtimeType, entityId, name);
 
   @JsonKey(ignore: true)
   @override
@@ -150,14 +132,10 @@ class _$_Entity implements _Entity {
 
 abstract class _Entity implements Entity {
   const factory _Entity(
-      {required final int entityId,
-      required final int conglomerateId,
-      required final String name}) = _$_Entity;
+      {required final int entityId, required final String name}) = _$_Entity;
 
   @override
   int get entityId;
-  @override
-  int get conglomerateId;
   @override
   String get name;
   @override

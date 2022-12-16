@@ -5,14 +5,17 @@ import 'package:drift_model_generator/src/utils/types.dart';
 import 'package:source_gen/source_gen.dart';
 
 class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
+  Set<String> additionalImports = {};
+
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
     final elements = library.annotatedWith(TypeChecker.fromRuntime(UseDrift));
 
     final Set<String> sources = {};
-    for (var element in elements) {
-      if (element.element.source != null) {
-        sources.add(element.element.source!.uri.toString());
+    for (var anElement in elements) {
+      final element = anElement.element;
+      if (element.source != null) {
+        sources.add(element.source!.uri.toString());
       }
     }
     final buffer = StringBuffer();
@@ -21,13 +24,23 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       buffer.writeln("import 'package:drift/drift.dart';");
     }
 
+    final generated = await super.generate(library, buildStep);
+
+    sources
+      ..addAll(additionalImports)
+      ..remove(
+        library.element.source.uri
+            .toString()
+            .replaceAll('.dart', '.driftm.dart'),
+      );
+
     for (var source in sources) {
       buffer
         ..writeln("import '$source';")
         ..writeln();
     }
 
-    buffer.writeln(await super.generate(library, buildStep));
+    buffer.writeln(generated);
 
     return buffer.toString();
   }
@@ -86,7 +99,15 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
               : element.fields);
 
       final primaryKeys = _readPrimaries(variables);
-      final allReferences = _readReferences(variables);
+      final allReferences = _readReferences(variables).toList();
+      if (autoReferenceEnums) {
+        allReferences.addAll(
+          _autoReference(
+            variables: variables,
+            currentReferences: allReferences.toList(),
+          ),
+        );
+      }
       final uniqueKeys = _readUniques(variables.toList());
 
       bool hasAnyAutoIncremented = false;
@@ -99,7 +120,6 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         buffer,
         allReferences,
         uniqueKeys,
-        autoReferenceEnums,
       );
 
       if (primaryKeys.isNotEmpty) {
@@ -150,6 +170,50 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     return buffer.toString();
   }
 
+  Iterable<Reference> _autoReference({
+    required Iterable<VariableElement> variables,
+    required List<Reference> currentReferences,
+  }) sync* {
+    for (var variable in variables) {
+      final alreadyReferenced = currentReferences
+              .indexWhere((ref) => ref.fromFields.contains(variable.name)) !=
+          -1;
+      if (alreadyReferenced) {
+        continue;
+      }
+      final targetElement = variable.type.element;
+      if (targetElement is EnumElement) {
+        final annotations =
+            TypeChecker.fromRuntime(UseDrift).annotationsOf(targetElement);
+        if (annotations.isNotEmpty) {
+          final annotation = ConstantReader(annotations.single);
+
+          final targetDriftClassName =
+              (annotation.read('driftClassName').isNull)
+                  ? null
+                  : annotation.read('driftClassName').stringValue;
+
+          final targetClassName =
+              (targetDriftClassName ?? '${targetElement.name}s');
+
+          final enumFieldName = annotation.read('enumFieldName').stringValue;
+
+          yield Reference(
+            fromFields: [variable.name],
+            toFields: [enumFieldName],
+            toDriftClass: targetClassName,
+          );
+
+          additionalImports.add(
+            targetElement.source.uri
+                .toString()
+                .replaceAll('.dart', '.driftm.dart'),
+          );
+        }
+      }
+    }
+  }
+
   void _mapVariables(
     Iterable<VariableElement> variables,
     Iterable<String> excludeFields,
@@ -158,7 +222,6 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     StringBuffer buffer,
     Iterable<Reference> allReferences,
     List<Unique> uniqueKeys,
-    bool autoReferenceEnums,
   ) {
     for (var variable in variables) {
       if (excludeFields.contains(variable.name)) {
@@ -221,32 +284,6 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
             (ref) => ref.fromFields.contains(variable.name) && ref.single,
           )
           .toList();
-
-      if (autoReferenceEnums && variable.type.element is EnumElement) {
-        final targetEnum = variable.type.element as EnumElement;
-        final annotations =
-            TypeChecker.fromRuntime(UseDrift).annotationsOf(targetEnum);
-        if (annotations.isNotEmpty) {
-          final annotation = ConstantReader(annotations.single);
-
-          final targetDriftClassName =
-              (annotation.read('driftClassName').isNull)
-                  ? null
-                  : annotation.read('driftClassName').stringValue;
-
-          final targetClassName =
-              (targetDriftClassName ?? '${targetEnum.name}s');
-
-          final enumFieldName = annotation.read('enumFieldName').stringValue;
-          references.add(
-            Reference(
-              fromFields: [variable.name],
-              toFields: [enumFieldName],
-              toDriftClass: targetClassName,
-            ),
-          );
-        }
-      }
 
       if (references.isNotEmpty) {
         for (var reference in references) {
@@ -311,25 +348,29 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     return uniques;
   }
 
-  Iterable<Reference> _readReferences(Iterable<VariableElement> fields) sync* {
-    for (var field in fields) {
-      final fieldClassAnnotation = field.type.element != null &&
+  Iterable<Reference> _readReferences(
+    Iterable<VariableElement> variables,
+  ) sync* {
+    for (var variable in variables) {
+      final fieldClassAnnotation = variable.type.element != null &&
               TypeChecker.fromRuntime(UseDrift)
-                  .annotationsOf(field.type.element!)
+                  .annotationsOf(variable.type.element!)
                   .isNotEmpty
           ? ConstantReader(TypeChecker.fromRuntime(UseDrift)
-              .annotationsOf(field.type.element!)
+              .annotationsOf(variable.type.element!)
               .single)
           : null;
 
       // ignore for non-classes and classes without useProto annotation
-      final referencedBy = (field.type.element is ClassElement &&
+      final referencedBy = (variable.type.element is ClassElement &&
               fieldClassAnnotation != null &&
               TypeChecker.fromRuntime(ReferencedBy)
-                  .annotationsOf(field)
+                  .annotationsOf(variable)
                   .isNotEmpty)
           ? ConstantReader(
-              TypeChecker.fromRuntime(ReferencedBy).annotationsOf(field).single,
+              TypeChecker.fromRuntime(ReferencedBy)
+                  .annotationsOf(variable)
+                  .single,
             )
           : null;
 
@@ -349,7 +390,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
               : fieldClassAnnotation!.read('driftClassName').stringValue;
 
       var targetClassName =
-          (targetDriftClassName ?? '${field.type.element!.name}s');
+          (targetDriftClassName ?? '${variable.type.element!.name}s');
 
       yield Reference(
         fromFields: fromFields,
@@ -362,6 +403,14 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
                 .toList(),
         toDriftClass: targetClassName,
       );
+
+      if (variable.source != null) {
+        additionalImports.add(
+          variable.type.element!.source!.uri
+              .toString()
+              .replaceAll('.dart', '.driftm.dart'),
+        );
+      }
     }
   }
 

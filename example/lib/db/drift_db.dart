@@ -1,13 +1,15 @@
 import 'package:drift/drift.dart';
 import 'package:example/example.dart';
 import 'package:example/example.driftm.dart';
+import 'package:example/models/entity.dart';
+import 'package:example/models/entity.driftm.dart';
 
 part 'drift_db.g.dart';
 
 const tables = [
-  AccountDetails,
+  Examples,
   Entities,
-  AccountTypes,
+  ExampleTypes,
 ];
 
 @DriftDatabase(tables: tables)
