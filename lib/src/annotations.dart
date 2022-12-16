@@ -22,9 +22,6 @@ class UseDrift {
   /// All generated sql code must use snake case naming in fields and tables names.
   final bool useSnakeCase;
 
-  /// List of custom indexes, that will be generated for drift model.
-  final Set<CustomIndex> customIndexes;
-
   /// List of fields that must be exluded from drift model.
   final Set<String> exludeFields;
 
@@ -40,7 +37,6 @@ class UseDrift {
 
   const UseDrift({
     this.useSnakeCase = true,
-    this.customIndexes = const {},
     this.enumFieldName = 'name',
     this.exludeFields = const {},
     this.driftClassName,
@@ -49,27 +45,6 @@ class UseDrift {
 }
 
 const useDrift = UseDrift();
-
-// class References implements FieldAnnotation {
-//   /// Use the name of the target table as the key
-//   /// and the set of table field names as the value.
-//   ///
-//   /// Example: `#fooBarId`
-//   final String field;
-
-//   /// Reference target table name
-//   ///
-//   /// Example: `FooBars`
-//   final String driftClassName;
-
-//   /// References with same [keyId] and [driftClassName] will be composite foreign key.
-//   final String? keyId;
-
-//   /// References with same [keyId] and [driftClassName] will be composite foreign key.
-//   ///
-//   /// #### Less priority than [ReferencedBy].
-//   const References(this.driftClassName, this.field, this.keyId);
-// }
 
 class ReferencedBy implements FieldAnnotation {
   final List<String> fieldNames;

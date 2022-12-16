@@ -357,7 +357,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
             ? fromFields
             : referencedBy
                 .read('toFieldNames')
-                .setValue
+                .listValue
                 .map((field) => ConstantReader(field).stringValue)
                 .toList(),
         toDriftClass: targetTableName,
