@@ -404,7 +404,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         toDriftClass: targetClassName,
       );
 
-      if (variable.source != null) {
+      if (variable.source != null && fromFields.length == 1) {
         additionalImports.add(
           variable.type.element!.source!.uri
               .toString()

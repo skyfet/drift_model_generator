@@ -1,3 +1,7 @@
+## 0.1.2
+
+- FIX: add import only for single relation
+
 ## 0.1.1
 
 - FIX: add imports for related files
