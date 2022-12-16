@@ -1,4 +1,7 @@
 import 'package:drift_model_generator/drift_model_generator.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'example.freezed.dart';
 
 @UseDrift(
   useSnakeCase: false,
@@ -48,22 +51,18 @@ class AccountDetail {
     this.fiName,
     this.entity,
   }) : accountType = AccountType.values.firstWhere(
-          (at) => at.name == accountType,
+          (at) => at.snakeName == accountType,
         );
 }
 
+@freezed
 @UseDrift(driftClassName: 'Entities')
-class Entity {
-  final int entityId;
-  final int conglomerateId;
-
-  final String name;
-
-  const Entity({
-    required this.entityId,
-    required this.conglomerateId,
-    required this.name,
-  });
+class Entity with _$Entity {
+  const factory Entity({
+    required int entityId,
+    required int conglomerateId,
+    required String name,
+  }) = _Entity;
 }
 
 @useDrift

@@ -8,9 +8,11 @@ environment:
 
 dependencies:
   drift: ^2.3.0
+  freezed_annotation: ^2.2.0
   drift_model_generator:
     path: ../
 
 dev_dependencies:
+  freezed: ^2.3.2
   drift_dev: ^2.3.3
   build_runner: ^2.3.2

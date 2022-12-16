@@ -1,7 +1,7 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:drift_model_generator/src/annotations.dart';
-import 'package:drift_model_generator/src/types.dart';
+import 'package:drift_model_generator/src/utils/types.dart';
 import 'package:source_gen/source_gen.dart';
 
 class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
@@ -76,101 +76,29 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         )
         ..writeln('class ${driftClassName ?? '${modelName}s'} extends Table {');
 
-      final fields =
-          Iterable.castFrom<FieldElement, FieldElement>(element.fields);
+      final variables = Iterable.castFrom<VariableElement, VariableElement>(
+          element.fields.isEmpty
+              ? element.constructors
+                  .firstWhere((c) => c.displayName == element.name)
+                  .children
+                  .cast<ParameterElement>()
+              : element.fields);
 
-      final primaryKeys = _readPrimaries(fields);
-      final allReferences = _readReferences(fields);
-      final uniqueKeys = _readUniques(fields.toList());
+      final primaryKeys = _readPrimaries(variables);
+      final allReferences = _readReferences(variables);
+      final uniqueKeys = _readUniques(variables.toList());
 
       bool hasAnyAutoIncremented = false;
 
-      for (var field in fields) {
-        if (excludeFields.contains(field.name)) {
-          continue;
-        }
-
-        final annotations = TypeChecker.fromRuntime(FieldAnnotation)
-            .annotationsOf(field)
-            .map(ConstantReader.new);
-
-        final isAutoIncremented =
-            annotations.whereOf<AutoIncrement>().isNotEmpty;
-
-        if (isAutoIncremented) hasAnyAutoIncremented = isAutoIncremented;
-
-        // TODO: fix when auto incremented after primary
-        final isPrimary =
-            !hasAnyAutoIncremented && primaryKeys.contains(field.name);
-
-        dynamic defaultValue;
-        // ignore default value then this field auto incremented
-        final defaultValueAnnotations = annotations.whereOf<WithDefault>();
-        if (!isAutoIncremented && defaultValueAnnotations.isNotEmpty) {
-          defaultValue =
-              defaultValueAnnotations.single.read('defaultValue').literalValue;
-        }
-        final nullable = !isAutoIncremented &&
-            !isPrimary &&
-            annotations.whereOf<Nullable>().isNotEmpty;
-
-        final driftType = DriftType.fromDartType(field.type);
-        buffer
-          ..writeln(driftType.columnType)
-          ..write(' get ')
-          ..write(field.name)
-          ..write(' => ')
-          ..write(driftType.builderName)
-          ..write('()');
-
-        if (isAutoIncremented) {
-          buffer.write('.autoIncrement()();');
-          continue;
-        }
-
-        if (defaultValue != null) {
-          buffer
-            ..write('.withDefault(')
-            ..write(
-              defaultValue is String
-                  ? ['current_timestamp', 'now()']
-                          .contains(defaultValue.toLowerCase())
-                      ? 'currentDateAndTime'
-                      : 'const Constant("$defaultValue")'
-                  : 'const Constant($defaultValue)',
-            )
-            ..write(')');
-        }
-
-        final references = allReferences.where(
-          (ref) => ref.fromFields.contains(field.name) && ref.single,
-        );
-
-        if (references.isNotEmpty) {
-          for (var reference in references) {
-            final fieldIndex = reference.fromFields.indexOf(field.name);
-            buffer
-              ..write('.references(')
-              ..write(reference.toDriftClass)
-              ..write(', #')
-              ..write(reference.toFields.elementAt(fieldIndex))
-              ..write(')');
-          }
-        }
-
-        final uniqueKeyIndex = uniqueKeys.indexWhere(
-          (u) => u.fields.contains(field.name) && u.single,
-        );
-        if (uniqueKeyIndex > -1) {
-          buffer.write('.unique()');
-        }
-
-        if (!isPrimary && nullable) {
-          buffer.write('.nullable()');
-        }
-
-        buffer.write('();');
-      }
+      _mapVariables(
+        variables,
+        excludeFields,
+        hasAnyAutoIncremented,
+        primaryKeys,
+        buffer,
+        allReferences,
+        uniqueKeys,
+      );
 
       if (primaryKeys.isNotEmpty) {
         buffer
@@ -220,7 +148,103 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     return buffer.toString();
   }
 
-  // List<Reference> _readReferences(List<FieldElement> fields) {
+  void _mapVariables(
+    Iterable<VariableElement> fields,
+    Iterable<String> excludeFields,
+    bool hasAnyAutoIncremented,
+    Iterable<String> primaryKeys,
+    StringBuffer buffer,
+    Iterable<Reference> allReferences,
+    List<Unique> uniqueKeys,
+  ) {
+    for (var field in fields) {
+      if (excludeFields.contains(field.name)) {
+        continue;
+      }
+
+      final annotations = TypeChecker.fromRuntime(FieldAnnotation)
+          .annotationsOf(field)
+          .map(ConstantReader.new);
+
+      final isAutoIncremented = annotations.whereOf<AutoIncrement>().isNotEmpty;
+
+      if (isAutoIncremented) hasAnyAutoIncremented = isAutoIncremented;
+
+      // TODO: fix when auto incremented after primary
+      final isPrimary =
+          !hasAnyAutoIncremented && primaryKeys.contains(field.name);
+
+      dynamic defaultValue;
+      // ignore default value then this field auto incremented
+      final defaultValueAnnotations = annotations.whereOf<WithDefault>();
+      if (!isAutoIncremented && defaultValueAnnotations.isNotEmpty) {
+        defaultValue =
+            defaultValueAnnotations.single.read('defaultValue').literalValue;
+      }
+      final nullable = !isAutoIncremented &&
+          !isPrimary &&
+          annotations.whereOf<Nullable>().isNotEmpty;
+
+      final driftType = DriftType.fromDartType(field.type);
+      buffer
+        ..writeln(driftType.columnType)
+        ..write(' get ')
+        ..write(field.name)
+        ..write(' => ')
+        ..write(driftType.builderName)
+        ..write('()');
+
+      if (isAutoIncremented) {
+        buffer.write('.autoIncrement()();');
+        continue;
+      }
+
+      if (defaultValue != null) {
+        buffer
+          ..write('.withDefault(')
+          ..write(
+            defaultValue is String
+                ? ['current_timestamp', 'now()']
+                        .contains(defaultValue.toLowerCase())
+                    ? 'currentDateAndTime'
+                    : 'const Constant("$defaultValue")'
+                : 'const Constant($defaultValue)',
+          )
+          ..write(')');
+      }
+
+      final references = allReferences.where(
+        (ref) => ref.fromFields.contains(field.name) && ref.single,
+      );
+
+      if (references.isNotEmpty) {
+        for (var reference in references) {
+          final fieldIndex = reference.fromFields.indexOf(field.name);
+          buffer
+            ..write('.references(')
+            ..write(reference.toDriftClass)
+            ..write(', #')
+            ..write(reference.toFields.elementAt(fieldIndex))
+            ..write(')');
+        }
+      }
+
+      final uniqueKeyIndex = uniqueKeys.indexWhere(
+        (u) => u.fields.contains(field.name) && u.single,
+      );
+      if (uniqueKeyIndex > -1) {
+        buffer.write('.unique()');
+      }
+
+      if (!isPrimary && nullable) {
+        buffer.write('.nullable()');
+      }
+
+      buffer.write('();');
+    }
+  }
+
+  // List<Reference> _readReferences(List<VariableElement> fields) {
   //   final refs = <Reference>[];
   //   for (var i = 0; i < fields.length; i++) {
   //     final referencesAnnotations = TypeChecker.fromRuntime(References)
@@ -251,7 +275,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
   //   return refs;
   // }
 
-  Iterable<String> _readPrimaries(Iterable<FieldElement> fields) sync* {
+  Iterable<String> _readPrimaries(Iterable<VariableElement> fields) sync* {
     for (var i = 0; i < fields.length; i++) {
       final uniqueKeyAnnotations = TypeChecker.fromRuntime(PrimaryKey)
           .annotationsOf(fields.elementAt(i))
@@ -264,7 +288,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     }
   }
 
-  List<Unique> _readUniques(List<FieldElement> fields) {
+  List<Unique> _readUniques(List<VariableElement> fields) {
     final uniques = <Unique>[];
     for (var i = 0; i < fields.length; i++) {
       final uniqueKeyAnnotations = TypeChecker.fromRuntime(UniqueKey)
@@ -287,7 +311,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     return uniques;
   }
 
-  Iterable<Reference> _readReferences(Iterable<FieldElement> fields) sync* {
+  Iterable<Reference> _readReferences(Iterable<VariableElement> fields) sync* {
     for (var field in fields) {
       final fieldClassAnnotation = field.type.element != null &&
               TypeChecker.fromRuntime(UseDrift)
