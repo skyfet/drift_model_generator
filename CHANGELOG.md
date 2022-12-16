@@ -1,3 +1,7 @@
+## 0.1.1
+
+- FIX: add imports for related files
+
 ## 0.1.0
 
 - FEAT: add `autoReferenceEnums` for `@UseDrift`, all enums can be automaticly referenced
