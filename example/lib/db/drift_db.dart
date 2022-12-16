@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:example/example.dart';
-import 'package:example/example.drift.dart';
+import 'package:example/example.driftm.dart';
 
 part 'drift_db.g.dart';
 

@@ -6,5 +6,5 @@ import 'package:source_gen/source_gen.dart';
 
 Builder driftClassBuilder(BuilderOptions options) => LibraryBuilder(
       DriftModelGenerator(),
-      generatedExtension: '.drift.dart',
+      generatedExtension: '.driftm.dart',
     );

@@ -15,9 +15,11 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         sources.add(element.element.source!.uri.toString());
       }
     }
+    final buffer = StringBuffer();
 
-    final buffer = StringBuffer()
-      ..writeln("import 'package:drift/drift.dart';");
+    if (elements.isNotEmpty) {
+      buffer.writeln("import 'package:drift/drift.dart';");
+    }
 
     for (var source in sources) {
       buffer
