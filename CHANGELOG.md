@@ -1,3 +1,7 @@
+## 0.2.1
+
+- FIX: clear additional imports when library changes
+
 ## 0.2.0
 
 - BREAKING: fix `exludeFields` > `excludeFields`

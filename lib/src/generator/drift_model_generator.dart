@@ -9,6 +9,8 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
 
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
+    additionalImports.clear();
+
     final elements = library.annotatedWith(TypeChecker.fromRuntime(UseDrift));
 
     final Set<String> sources = {};
