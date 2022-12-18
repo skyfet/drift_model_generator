@@ -1,6 +1,9 @@
-## 0.3.0
+## 0.3.1
 
 - FEAT: support BigInt
+
+## 0.3.0
+
 - FEAT: exclude automaticly referenced by fields
 - FIX: do not import enums in generated code
 

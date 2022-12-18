@@ -4,6 +4,7 @@ const Map<String, DriftType> types = {
   'bool': DriftType('BoolColumn', 'boolean'),
   'String': DriftType('TextColumn', 'text'),
   'int': DriftType('IntColumn', 'integer'),
+  'BigInt': DriftType('Int64Column', 'int64'),
   'double': DriftType('RealColumn', 'real'),
   'DateTime': DriftType('DateTimeColumn', 'dateTime'),
 };
