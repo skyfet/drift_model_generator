@@ -1,3 +1,9 @@
+## 0.3.0
+
+- FEAT: support BigInt
+- FEAT: exclude automaticly referenced by fields
+- FIX: do not import enums in generated code
+
 ## 0.2.1
 
 - FIX: clear additional imports when library changes

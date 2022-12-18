@@ -16,8 +16,8 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     final Set<String> sources = {};
     for (var anElement in elements) {
       final element = anElement.element;
-      if (element.source != null) {
-        sources.add(element.source!.uri.toString());
+      if (element is ClassElement) {
+        sources.add(element.source.uri.toString());
       }
     }
     final buffer = StringBuffer();
@@ -69,7 +69,8 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     final excludeFields = annotation
         .read('excludeFields')
         .setValue
-        .map((ex) => ex.toStringValue()!);
+        .map((ex) => ex.toStringValue()!)
+        .toList();
 
     if (element is EnumElement) {
       buffer
@@ -103,7 +104,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       final primaryKeys = _readPrimaries(variables);
       final allReferences = _readReferences(
         variables: variables,
-        excludeFields: excludeFields.toList(),
+        excludeFields: excludeFields,
       ).toList();
       if (autoReferenceEnums) {
         allReferences.addAll(
@@ -410,9 +411,9 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         toDriftClass: targetClassName,
       );
 
-      if (variable.source != null &&
-          fromFields.length == 1 &&
-          !excludeFields.contains(variable.name)) {
+      excludeFields.add(variable.name);
+
+      if (fromFields.length == 1 && variable.type.element?.source != null) {
         additionalImports.add(
           variable.type.element!.source!.uri
               .toString()

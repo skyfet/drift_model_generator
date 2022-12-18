@@ -2,7 +2,7 @@ import 'package:drift_model_generator/drift_model_generator.dart';
 import 'package:example/models/entity.dart';
 
 @UseDrift(
-  excludeFields: {'fiName', 'entity'},
+  excludeFields: {'fiName'},
   driftConstructor: 'fromDb',
 )
 class Example {
