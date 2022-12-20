@@ -51,20 +51,20 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
   @override
   String generateForAnnotatedElement(
     Element element,
-    ConstantReader ann,
+    ConstantReader annotation,
     BuildStep buildStep,
   ) {
-    final annotation = UseDriftReader.readAnnotation(ann);
+    final ann = UseDriftReader.readAnnotation(annotation);
     final buffer = StringBuffer();
     final modelName = element.name!;
 
     if (element is EnumElement) {
       buffer
         ..writeln(
-            'class ${annotation.driftClassName ?? '${modelName}s'} extends Table {')
+            'class ${ann.driftClassName ?? '${modelName}s'} extends Table {')
         ..writeln(
           _generateDriftEnumClass(
-            annotation: annotation,
+            annotation: ann,
             element: element,
           ),
         );
@@ -73,12 +73,12 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         ..writeln()
         ..write('@UseRowClass($modelName')
         ..write(
-          annotation.driftConstructor != null
-              ? ', constructor: "${annotation.driftConstructor}")'
+          ann.driftConstructor != null
+              ? ', constructor: "${ann.driftConstructor}")'
               : ')',
         )
         ..writeln(
-          'class ${annotation.driftClassName ?? '${modelName}s'} extends Table {',
+          'class ${ann.driftClassName ?? '${modelName}s'} extends Table {',
         );
 
       final variables = Iterable.castFrom<VariableElement, VariableElement>(
@@ -92,9 +92,9 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       final primaryKeys = _readPrimaries(variables);
       final allReferences = _readReferences(
         variables: variables,
-        excludeFields: annotation.excludeFields,
+        excludeFields: ann.excludeFields,
       ).toList();
-      if (annotation.autoReferenceEnums) {
+      if (ann.autoReferenceEnums) {
         allReferences.addAll(
           _autoReference(
             variables: variables,
@@ -107,7 +107,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
 
       _mapVariables(
         buffer: buffer,
-        annotation: annotation,
+        annotation: ann,
         hasAnyAutoIncremented: hasAnyAutoIncremented,
         variables: variables,
         allReferences: allReferences,
@@ -124,8 +124,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
           ..write('};');
       }
 
-      final compositeUniques =
-          annotation.uniqueKeys.where((uk) => uk.length > 1);
+      final compositeUniques = ann.uniqueKeys.where((uk) => uk.length > 1);
       if (compositeUniques.isNotEmpty) {
         buffer
           ..writeln()
@@ -134,9 +133,9 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
           ..writeln('List<Set<Column<Object>>> get uniqueKeys => [');
         for (var uk in compositeUniques) {
           buffer
-            ..write('{')
+            ..writeln('{')
             ..write(uk.join(', '))
-            ..write('}');
+            ..write('}${compositeUniques.length > 1 ? ',' : ''}');
         }
         buffer.writeln('];');
       }
@@ -151,7 +150,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         for (var fk in compositeReferences) {
           buffer
             ..write("'")
-            ..write(fk.toSql(useSnake: annotation.useSnakeCase))
+            ..write(fk.toSql(useSnake: ann.useSnakeCase))
             ..write("',");
         }
         buffer.writeln('];');
@@ -292,7 +291,10 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       final uniqueKeyIndex = annotation.uniqueKeys.indexWhere(
         (u) => u.contains(variable.name) && u.length == 1,
       );
-      if (uniqueKeyIndex > -1) {
+      if (uniqueKeyIndex > -1 ||
+          TypeChecker.fromRuntime(UniqueKey)
+              .annotationsOf(variable)
+              .isNotEmpty) {
         buffer.write('.unique()');
       }
 
@@ -306,11 +308,11 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
 
   Iterable<String> _readPrimaries(Iterable<VariableElement> fields) sync* {
     for (var i = 0; i < fields.length; i++) {
-      final uniqueKeyAnnotations = TypeChecker.fromRuntime(PrimaryKey)
+      final primaryKeyAnnotations = TypeChecker.fromRuntime(PrimaryKey)
           .annotationsOf(fields.elementAt(i))
           .map(ConstantReader.new);
 
-      if (uniqueKeyAnnotations.isNotEmpty) {
+      if (primaryKeyAnnotations.isNotEmpty) {
         final fieldName = fields.elementAt(i).name;
         yield fieldName;
       }

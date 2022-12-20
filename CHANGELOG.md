@@ -1,3 +1,8 @@
+## 0.4.1
+
+- FEAT: resume support `UniqueKey` annotation for single fields
+- FIX: comma is missing when using multiple composite unique keys
+
 ## 0.4.0
 
 - BREAKING: no longer support `UniqueKey` annotation, use `uniqueKeys` param of `UseDrift` annotation instead

@@ -98,3 +98,11 @@ class PrimaryKey implements FieldAnnotation {
 }
 
 const primaryKey = PrimaryKey();
+
+class UniqueKey implements FieldAnnotation {
+  /// Single unique field constraint. For composite unique keys,
+  /// use [UseDrift.uniqueKeys] insted.
+  const UniqueKey();
+}
+
+const uniqueKey = UniqueKey();

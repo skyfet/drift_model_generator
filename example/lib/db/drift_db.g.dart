@@ -255,8 +255,8 @@ class $EntitiesTable extends Entities with TableInfo<$EntitiesTable, Entity> {
 
 class ExamplesCompanion extends UpdateCompanion<Example> {
   final Value<int> exampleId;
-  final Value<String?> exampleNumber;
-  final Value<String> exampleType;
+  final Value<String> exampleNumber;
+  final Value<String?> exampleType;
   final Value<bool> isDefault;
   final Value<int> entityId;
   final Value<DateTime> createdAt;
@@ -270,12 +270,12 @@ class ExamplesCompanion extends UpdateCompanion<Example> {
   });
   ExamplesCompanion.insert({
     this.exampleId = const Value.absent(),
-    this.exampleNumber = const Value.absent(),
-    required String exampleType,
+    required String exampleNumber,
+    this.exampleType = const Value.absent(),
     this.isDefault = const Value.absent(),
     required int entityId,
     this.createdAt = const Value.absent(),
-  })  : exampleType = Value(exampleType),
+  })  : exampleNumber = Value(exampleNumber),
         entityId = Value(entityId);
   static Insertable<Example> custom({
     Expression<int>? exampleId,
@@ -297,8 +297,8 @@ class ExamplesCompanion extends UpdateCompanion<Example> {
 
   ExamplesCompanion copyWith(
       {Value<int>? exampleId,
-      Value<String?>? exampleNumber,
-      Value<String>? exampleType,
+      Value<String>? exampleNumber,
+      Value<String?>? exampleType,
       Value<bool>? isDefault,
       Value<int>? entityId,
       Value<DateTime>? createdAt}) {
@@ -369,17 +369,17 @@ class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
       const VerificationMeta('exampleNumber');
   @override
   late final GeneratedColumn<String> exampleNumber = GeneratedColumn<String>(
-      'example_number', aliasedName, true,
+      'example_number', aliasedName, false,
       type: DriftSqlType.string,
-      requiredDuringInsert: false,
+      requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
   static const VerificationMeta _exampleTypeMeta =
       const VerificationMeta('exampleType');
   @override
   late final GeneratedColumn<String> exampleType = GeneratedColumn<String>(
-      'example_type', aliasedName, false,
+      'example_type', aliasedName, true,
       type: DriftSqlType.string,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES example_types (name)'));
   static const VerificationMeta _isDefaultMeta =
@@ -433,14 +433,14 @@ class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
           _exampleNumberMeta,
           exampleNumber.isAcceptableOrUnknown(
               data['example_number']!, _exampleNumberMeta));
+    } else if (isInserting) {
+      context.missing(_exampleNumberMeta);
     }
     if (data.containsKey('example_type')) {
       context.handle(
           _exampleTypeMeta,
           exampleType.isAcceptableOrUnknown(
               data['example_type']!, _exampleTypeMeta));
-    } else if (isInserting) {
-      context.missing(_exampleTypeMeta);
     }
     if (data.containsKey('is_default')) {
       context.handle(_isDefaultMeta,
@@ -468,15 +468,15 @@ class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
       exampleId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}example_id'])!,
       exampleNumber: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}example_number']),
-      exampleType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}example_type'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}example_number'])!,
       isDefault: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_default'])!,
       entityId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}entity_id'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      exampleType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}example_type']),
     );
   }
 

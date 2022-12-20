@@ -4,24 +4,22 @@ import 'package:example/models/entity.dart';
 @UseDrift(
   excludeFields: {'fiName'},
   driftConstructor: 'fromDb',
-  uniqueKeys: [
-    {'exampleNumber'}
-  ],
 )
 class Example {
   const Example({
     required this.exampleId,
-    required this.exampleType,
     required this.isDefault,
     required this.entityId,
     required this.createdAt,
-    this.exampleNumber,
+    required this.exampleNumber,
+    this.exampleType,
     this.entity,
   });
   @autoIncrement
   final int exampleId;
-  final String? exampleNumber;
-  final ExampleType exampleType;
+  @uniqueKey
+  final String exampleNumber;
+  final ExampleType? exampleType;
 
   @WithDefault(false)
   final bool isDefault;
@@ -37,10 +35,10 @@ class Example {
   Example.fromDb({
     required this.exampleId,
     required this.exampleNumber,
-    required String exampleType,
     required this.isDefault,
     required this.entityId,
     required this.createdAt,
+    String? exampleType,
     this.entity,
   }) : exampleType = ExampleType.values.firstWhere(
           (at) => at.snakeName == exampleType,

@@ -12,8 +12,9 @@ import 'package:example/models/entity.driftm.dart';
 @UseRowClass(Example, constructor: "fromDb")
 class Examples extends Table {
   IntColumn get exampleId => integer().autoIncrement()();
-  TextColumn get exampleNumber => text().unique().nullable()();
-  TextColumn get exampleType => text().references(ExampleTypes, #name)();
+  TextColumn get exampleNumber => text().unique()();
+  TextColumn get exampleType =>
+      text().references(ExampleTypes, #name).nullable()();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   IntColumn get entityId => integer().references(Entities, #entityId)();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
