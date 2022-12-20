@@ -28,6 +28,14 @@ class UseDrift {
   /// List of fields that must be exluded from drift model.
   final Set<String> excludeFields;
 
+  /// List of unique keys.
+  ///
+  /// Example:
+  /// ```dart
+  /// [{'foo', 'bar'}, {'someUniqueField'}]
+  /// ```
+  final List<Set<String>> uniqueKeys;
+
   /// When use this annotation on [Enum]s, this name will
   /// be used as primary key.
   final String enumFieldName;
@@ -43,6 +51,7 @@ class UseDrift {
     this.enumFieldName = 'name',
     this.excludeFields = const {},
     this.autoReferenceEnums = true,
+    this.uniqueKeys = const [],
     this.driftClassName,
     this.driftConstructor,
   });
@@ -89,17 +98,3 @@ class PrimaryKey implements FieldAnnotation {
 }
 
 const primaryKey = PrimaryKey();
-
-class UniqueKey implements FieldAnnotation {
-  /// Keys with same id will be composite.
-  final String? keyId;
-
-  const UniqueKey([this.keyId]);
-}
-
-class Nullable implements FieldAnnotation {
-  /// Will be ignored when this field annotated by [AutoIncrement] or [PrimaryKey].
-  const Nullable();
-}
-
-const nullable = Nullable();

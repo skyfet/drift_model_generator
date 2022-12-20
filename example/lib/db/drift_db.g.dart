@@ -370,7 +370,9 @@ class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
   @override
   late final GeneratedColumn<String> exampleNumber = GeneratedColumn<String>(
       'example_number', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
   static const VerificationMeta _exampleTypeMeta =
       const VerificationMeta('exampleType');
   @override

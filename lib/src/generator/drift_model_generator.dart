@@ -1,4 +1,5 @@
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:build/build.dart';
 import 'package:drift_model_generator/src/annotations.dart';
 import 'package:drift_model_generator/src/utils/types.dart';
@@ -50,36 +51,21 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
   @override
   String generateForAnnotatedElement(
     Element element,
-    ConstantReader annotation,
+    ConstantReader ann,
     BuildStep buildStep,
   ) {
+    final annotation = UseDriftReader.readAnnotation(ann);
     final buffer = StringBuffer();
     final modelName = element.name!;
-    final useSnakeCase = annotation.read('useSnakeCase').boolValue;
-    final autoReferenceEnums = annotation.read('autoReferenceEnums').boolValue;
-
-    final driftClassName = annotation.read('driftClassName').isNull
-        ? null
-        : annotation.read('driftClassName').stringValue;
-
-    final driftConstructor = annotation.read('driftConstructor').isNull
-        ? null
-        : annotation.read('driftConstructor').stringValue;
-
-    final excludeFields = annotation
-        .read('excludeFields')
-        .setValue
-        .map((ex) => ex.toStringValue()!)
-        .toList();
 
     if (element is EnumElement) {
       buffer
-        ..writeln('class ${driftClassName ?? '${modelName}s'} extends Table {')
+        ..writeln(
+            'class ${annotation.driftClassName ?? '${modelName}s'} extends Table {')
         ..writeln(
           _generateDriftEnumClass(
             annotation: annotation,
             element: element,
-            useSnakeCase: useSnakeCase,
           ),
         );
     } else if (element is ClassElement) {
@@ -87,11 +73,13 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         ..writeln()
         ..write('@UseRowClass($modelName')
         ..write(
-          driftConstructor != null
-              ? ', constructor: "$driftConstructor")'
+          annotation.driftConstructor != null
+              ? ', constructor: "${annotation.driftConstructor}")'
               : ')',
         )
-        ..writeln('class ${driftClassName ?? '${modelName}s'} extends Table {');
+        ..writeln(
+          'class ${annotation.driftClassName ?? '${modelName}s'} extends Table {',
+        );
 
       final variables = Iterable.castFrom<VariableElement, VariableElement>(
           element.fields.isEmpty
@@ -104,9 +92,9 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       final primaryKeys = _readPrimaries(variables);
       final allReferences = _readReferences(
         variables: variables,
-        excludeFields: excludeFields,
+        excludeFields: annotation.excludeFields,
       ).toList();
-      if (autoReferenceEnums) {
+      if (annotation.autoReferenceEnums) {
         allReferences.addAll(
           _autoReference(
             variables: variables,
@@ -114,18 +102,16 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
           ),
         );
       }
-      final uniqueKeys = _readUniques(variables.toList());
 
       bool hasAnyAutoIncremented = false;
 
       _mapVariables(
-        variables,
-        excludeFields,
-        hasAnyAutoIncremented,
-        primaryKeys,
-        buffer,
-        allReferences,
-        uniqueKeys,
+        buffer: buffer,
+        annotation: annotation,
+        hasAnyAutoIncremented: hasAnyAutoIncremented,
+        variables: variables,
+        allReferences: allReferences,
+        primaryKeys: primaryKeys,
       );
 
       if (primaryKeys.isNotEmpty) {
@@ -138,17 +124,18 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
           ..write('};');
       }
 
-      final compositeUniques = uniqueKeys.where((uk) => uk.composite);
+      final compositeUniques =
+          annotation.uniqueKeys.where((uk) => uk.length > 1);
       if (compositeUniques.isNotEmpty) {
         buffer
           ..writeln()
           ..writeln()
           ..writeln('@override')
           ..writeln('List<Set<Column<Object>>> get uniqueKeys => [');
-        for (var uk in uniqueKeys) {
+        for (var uk in compositeUniques) {
           buffer
             ..write('{')
-            ..write(uk.fields.join(', '))
+            ..write(uk.join(', '))
             ..write('}');
         }
         buffer.writeln('];');
@@ -164,7 +151,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         for (var fk in compositeReferences) {
           buffer
             ..write("'")
-            ..write(fk.toSql(useSnake: useSnakeCase))
+            ..write(fk.toSql(useSnake: annotation.useSnakeCase))
             ..write("',");
         }
         buffer.writeln('];');
@@ -220,17 +207,16 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     }
   }
 
-  void _mapVariables(
-    Iterable<VariableElement> variables,
-    Iterable<String> excludeFields,
-    bool hasAnyAutoIncremented,
-    Iterable<String> primaryKeys,
-    StringBuffer buffer,
-    Iterable<Reference> allReferences,
-    List<Unique> uniqueKeys,
-  ) {
+  void _mapVariables({
+    required Iterable<VariableElement> variables,
+    required bool hasAnyAutoIncremented,
+    required Iterable<String> primaryKeys,
+    required StringBuffer buffer,
+    required Iterable<Reference> allReferences,
+    required UseDrift annotation,
+  }) {
     for (var variable in variables) {
-      if (excludeFields.contains(variable.name)) {
+      if (annotation.excludeFields.contains(variable.name)) {
         continue;
       }
 
@@ -255,7 +241,7 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       }
       final nullable = !isAutoIncremented &&
           !isPrimary &&
-          annotations.whereOf<Nullable>().isNotEmpty;
+          variable.type.nullabilitySuffix != NullabilitySuffix.none;
 
       final driftType = DriftType.fromDartType(variable.type);
       buffer
@@ -303,8 +289,8 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         }
       }
 
-      final uniqueKeyIndex = uniqueKeys.indexWhere(
-        (u) => u.fields.contains(variable.name) && u.single,
+      final uniqueKeyIndex = annotation.uniqueKeys.indexWhere(
+        (u) => u.contains(variable.name) && u.length == 1,
       );
       if (uniqueKeyIndex > -1) {
         buffer.write('.unique()');
@@ -331,32 +317,9 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
     }
   }
 
-  List<Unique> _readUniques(List<VariableElement> fields) {
-    final uniques = <Unique>[];
-    for (var i = 0; i < fields.length; i++) {
-      final uniqueKeyAnnotations = TypeChecker.fromRuntime(UniqueKey)
-          .annotationsOf(fields[i])
-          .map(ConstantReader.new);
-      if (uniqueKeyAnnotations.isNotEmpty) {
-        final fieldName = fields[i].name;
-        final ann = uniqueKeyAnnotations.single;
-        final keyIdConst = ann.read('keyId');
-        final keyId = keyIdConst.isNull ? fieldName : keyIdConst.stringValue;
-        final uIndex = uniques.indexWhere((u) => u.keyId == keyId);
-        if (uIndex == -1) {
-          uniques.add(Unique(keyId, [fieldName]));
-        } else {
-          uniques[uIndex].fields.add(fieldName);
-        }
-      }
-    }
-
-    return uniques;
-  }
-
   Iterable<Reference> _readReferences({
     required Iterable<VariableElement> variables,
-    required List<String> excludeFields,
+    required Set<String> excludeFields,
   }) sync* {
     for (var variable in variables) {
       final fieldClassAnnotation = variable.type.element != null &&
@@ -424,18 +387,17 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
   }
 
   StringBuffer _generateDriftEnumClass({
-    required ConstantReader annotation,
+    required UseDrift annotation,
     required EnumElement element,
-    required bool useSnakeCase,
   }) {
     final buffer = StringBuffer();
-    final enumFieldName = annotation.read('enumFieldName').stringValue;
+    final enumFieldName = annotation.enumFieldName;
 
     final fields = element.fields.where((f) => f.isEnumConstant).map(
           (f) => f.name,
         );
 
-    final sqlNames = useSnakeCase ? fields.map(_makeSnake) : fields;
+    final sqlNames = annotation.useSnakeCase ? fields.map(_makeSnake) : fields;
 
     for (var i = 0; i < fields.length; i++) {
       final fieldName = fields.elementAt(i);
@@ -501,13 +463,26 @@ extension WhereInstanceOf on Iterable<ConstantReader> {
       where((a) => a.instanceOf(TypeChecker.fromRuntime(T)));
 }
 
-// extension SafeString on Symbol {
-//   /// Convert to string:
-//   /// ```dart
-//   /// Symbol("some_string") // toString()
-//   /// "some_string" // toSafeString()
-//   /// ```
-//   String toSafeString() {
-//     return RegExp(r'(?<=\()(.*)(?=\))').firstMatch('$this')!.group(0)!;
-//   }
-// }
+extension UseDriftReader on UseDrift {
+  static UseDrift readAnnotation(ConstantReader annotation) {
+    return UseDrift(
+      autoReferenceEnums: annotation.read('autoReferenceEnums').boolValue,
+      driftClassName: annotation.peek('driftClassName')?.stringValue,
+      driftConstructor: annotation.peek('driftConstructor')?.stringValue,
+      enumFieldName: annotation.read('enumFieldName').stringValue,
+      useSnakeCase: annotation.read('useSnakeCase').boolValue,
+      excludeFields: annotation
+          .read('excludeFields')
+          .setValue
+          .map((v) => v.toStringValue()!)
+          .toSet(),
+      uniqueKeys: annotation
+          .read('uniqueKeys')
+          .listValue
+          .map(
+            (el) => el.toSetValue()!.map((v) => v.toStringValue()!).toSet(),
+          )
+          .toList(),
+    );
+  }
+}

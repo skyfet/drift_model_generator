@@ -1,6 +1,11 @@
+## 0.4.0
+
+- BREAKING: no longer support `UniqueKey` annotation, use `uniqueKeys` param of `UseDrift` annotation instead
+- BREAKING: no longer support `Nullable` annotation, `nullable` values will be auto-dectected
+
 ## 0.3.1
 
-- FEAT: support BigInt
+- FEAT: support BigInt (autoincrement for int64 does not support by drift at 20.12.22)
 
 ## 0.3.0
 

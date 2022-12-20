@@ -4,6 +4,9 @@ import 'package:example/models/entity.dart';
 @UseDrift(
   excludeFields: {'fiName'},
   driftConstructor: 'fromDb',
+  uniqueKeys: [
+    {'exampleNumber'}
+  ],
 )
 class Example {
   const Example({
@@ -17,7 +20,6 @@ class Example {
   });
   @autoIncrement
   final int exampleId;
-  @nullable
   final String? exampleNumber;
   final ExampleType exampleType;
 

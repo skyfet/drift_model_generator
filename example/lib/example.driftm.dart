@@ -12,7 +12,7 @@ import 'package:example/models/entity.driftm.dart';
 @UseRowClass(Example, constructor: "fromDb")
 class Examples extends Table {
   IntColumn get exampleId => integer().autoIncrement()();
-  TextColumn get exampleNumber => text().nullable()();
+  TextColumn get exampleNumber => text().unique().nullable()();
   TextColumn get exampleType => text().references(ExampleTypes, #name)();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   IntColumn get entityId => integer().references(Entities, #entityId)();
