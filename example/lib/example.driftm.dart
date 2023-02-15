@@ -17,7 +17,13 @@ class Examples extends Table {
       text().references(ExampleTypes, #name).nullable()();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   IntColumn get entityId => integer().references(Entities, #entityId)();
+  IntColumn get userId => integer()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY ("user_id") REFERENCES "users" ("user_id")',
+      ];
 }
 
 class ExampleTypes extends Table {

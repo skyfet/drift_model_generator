@@ -36,6 +36,24 @@ class UseDrift {
   /// ```
   final List<Set<String>> uniqueKeys;
 
+  /// Foreign keys map.
+  ///
+  /// Use referenced **table name** (usually plural, ex: `users`, `accounts`)
+  /// as key and reference fields as value.
+  ///
+  /// For every map value, first element of array is FROM **table fields**
+  /// and second element of array is TO **table fields**.
+  /// Do not provide second element of value array, if TO same as FROM.
+  ///
+  /// Example:
+  /// ```dart
+  /// {'foo_bars': [['foo_id', 'omega_id'], ['foo_id', 'bar_id']]}
+  /// ```
+  /// ```dart
+  /// {'foo_bars': [['foo_id']]}
+  /// ```
+  final Map<String, List<List<String>>> foreignKeys;
+
   /// When use this annotation on [Enum]s, this name will
   /// be used as primary key.
   final String enumFieldName;
@@ -52,6 +70,7 @@ class UseDrift {
     this.excludeFields = const {},
     this.autoReferenceEnums = true,
     this.uniqueKeys = const [],
+    this.foreignKeys = const {},
     this.driftClassName,
     this.driftConstructor,
   });

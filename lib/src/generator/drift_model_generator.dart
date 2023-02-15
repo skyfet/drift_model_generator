@@ -93,7 +93,25 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       final allReferences = _readReferences(
         variables: variables,
         excludeFields: ann.excludeFields,
-      ).toList();
+      ).toList()
+        ..addAll(
+          ann.foreignKeys
+              .map(
+                (referencedTable, references) => MapEntry(
+                  '',
+                  Reference(
+                    fromFields: references.first,
+                    toFields: references.length == 1
+                        ? references.first
+                        : references.last,
+                    toDriftClass: referencedTable,
+                    allowModelReference: false,
+                  ),
+                ),
+              )
+              .values,
+        );
+
       if (ann.autoReferenceEnums) {
         allReferences.addAll(
           _autoReference(
@@ -140,7 +158,10 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
         buffer.writeln('];');
       }
 
-      final compositeReferences = allReferences.where((ref) => ref.composite);
+      final compositeReferences = allReferences.where(
+        (ref) => ref.composite || !ref.allowModelReference,
+      );
+
       if (compositeReferences.isNotEmpty) {
         buffer
           ..writeln()
@@ -272,7 +293,10 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
 
       final references = allReferences
           .where(
-            (ref) => ref.fromFields.contains(variable.name) && ref.single,
+            (ref) =>
+                ref.fromFields.contains(variable.name) &&
+                ref.single &&
+                ref.allowModelReference,
           )
           .toList();
 
@@ -430,6 +454,7 @@ String _makeSnake(String f) {
 
 class Reference {
   final String toDriftClass;
+  final bool allowModelReference;
   List<String> fromFields;
   List<String> toFields;
 
@@ -437,6 +462,7 @@ class Reference {
     required this.fromFields,
     required this.toFields,
     required this.toDriftClass,
+    this.allowModelReference = true,
   });
 
   bool get composite => fromFields.length > 1;
@@ -485,6 +511,24 @@ extension UseDriftReader on UseDrift {
             (el) => el.toSetValue()!.map((v) => v.toStringValue()!).toSet(),
           )
           .toList(),
+      foreignKeys: annotation.read('foreignKeys').mapValue.map(
+        (key, value) {
+          final references = value!.toListValue()!;
+          assert(
+            references.length == 1 || references.length == 2,
+            'References list migth have 1 or 2 list of strings.',
+          );
+          return MapEntry(
+            key!.toStringValue()!,
+            references
+                .map(
+                  (v) =>
+                      v.toListValue()!.map((v) => v.toStringValue()!).toList(),
+                )
+                .toList(),
+          );
+        },
+      ),
     );
   }
 }

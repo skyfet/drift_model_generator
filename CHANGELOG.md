@@ -1,3 +1,15 @@
+## 0.5.2
+
+- FEAT: provide foreign keys without model importing using `UseDrift`.`foreignKeys` annotation 
+
+## 0.5.1
+
+- FIX: change versions: build: ^2.3.1, analyzer: ^5.0.0, source_gen: ^1.2.3
+
+## 0.5.0
+
+- FIX: change versions: `build` >=2.0.0 <3.0.0, `analyzer` >=4.0.0 <6.0.0, `sdk` >=2.17.0 <3.0.0
+
 ## 0.4.1
 
 - FEAT: resume support `UniqueKey` annotation for single fields

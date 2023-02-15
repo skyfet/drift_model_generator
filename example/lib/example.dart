@@ -4,12 +4,18 @@ import 'package:example/models/entity.dart';
 @UseDrift(
   excludeFields: {'fiName'},
   driftConstructor: 'fromDb',
+  foreignKeys: {
+    'users': [
+      ['user_id']
+    ]
+  },
 )
 class Example {
   const Example({
     required this.exampleId,
     required this.isDefault,
     required this.entityId,
+    required this.userId,
     required this.createdAt,
     required this.exampleNumber,
     this.exampleType,
@@ -25,6 +31,7 @@ class Example {
   final bool isDefault;
 
   final int entityId;
+  final int userId;
 
   @WithDefault('now()')
   final DateTime createdAt;
@@ -37,6 +44,7 @@ class Example {
     required this.exampleNumber,
     required this.isDefault,
     required this.entityId,
+    required this.userId,
     required this.createdAt,
     String? exampleType,
     this.entity,
