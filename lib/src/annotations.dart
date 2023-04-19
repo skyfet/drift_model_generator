@@ -1,5 +1,3 @@
-import 'package:drift/drift.dart';
-
 abstract class FieldAnnotation {}
 
 class CustomIndex implements FieldAnnotation {
