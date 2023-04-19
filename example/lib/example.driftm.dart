@@ -19,6 +19,9 @@ class Examples extends Table {
   IntColumn get entityId => integer().references(Entities, #entityId)();
   IntColumn get userId => integer()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get hasType => boolean().generatedAs(
+        CustomExpression('example_type is not null'),
+      )();
 
   @override
   List<String> get customConstraints => [

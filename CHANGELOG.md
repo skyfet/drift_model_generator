@@ -1,3 +1,7 @@
+## 0.5.3
+
+- FEAT: add computed field using `Computed` annotation 
+
 ## 0.5.2
 
 - FEAT: provide foreign keys without model importing using `UseDrift`.`foreignKeys` annotation 

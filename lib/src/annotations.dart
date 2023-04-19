@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart';
+
 abstract class FieldAnnotation {}
 
 class CustomIndex implements FieldAnnotation {
@@ -77,6 +79,12 @@ class UseDrift {
 }
 
 const useDrift = UseDrift();
+
+class Computed implements FieldAnnotation {
+  const Computed(this.sql);
+
+  final String sql;
+}
 
 class ReferencedBy implements FieldAnnotation {
   final List<String> fieldNames;

@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:drift_model_generator/drift_model_generator.dart';
 import 'package:example/models/entity.dart';
 
@@ -18,6 +19,7 @@ class Example {
     required this.userId,
     required this.createdAt,
     required this.exampleNumber,
+    required this.hasType,
     this.exampleType,
     this.entity,
   });
@@ -39,6 +41,9 @@ class Example {
   @ReferencedBy(['entityId'])
   final Entity? entity;
 
+  @Computed('example_type is not null')
+  final bool hasType;
+
   Example.fromDb({
     required this.exampleId,
     required this.exampleNumber,
@@ -46,8 +51,9 @@ class Example {
     required this.entityId,
     required this.userId,
     required this.createdAt,
-    String? exampleType,
+    required this.hasType,
     this.entity,
+    String? exampleType,
   }) : exampleType = ExampleType.values.firstWhere(
           (at) => at.snakeName == exampleType,
         );
