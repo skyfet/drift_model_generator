@@ -19,7 +19,7 @@ The Drift Model Generator package is an extension built on top of the Drift pack
 
 1. **Define Your Dart Classes**: Define your database models as Dart classes, annotating them with the appropriate annotations from the Drift Model Generator package.
 
-2. **Run Code Generation**: Run the Drift Model Generator to automatically generate Drift classes based on your annotated Dart classes. You can do this using the `flutter pub run build_runner build` command.
+2. **Run Code Generation**: Run the Drift Model Generator to automatically generate Drift classes based on your annotated Dart classes. You can do this using the `dart run build_runner build` command.
 
 3. **Use Generated Classes**: Use the generated Drift classes in your application code to interact with your database. You can perform CRUD operations and define queries using the generated classes.
 

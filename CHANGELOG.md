@@ -1,3 +1,6 @@
+## 0.6.1
+- FIX: update readme
+
 ## 0.6.0
 
 - FEAT: add `NotNull` annotation 
