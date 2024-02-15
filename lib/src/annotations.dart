@@ -1,67 +1,84 @@
 abstract class FieldAnnotation {}
 
-class CustomIndex implements FieldAnnotation {
-  final String indexName;
+const useDrift = UseDrift();
+const primaryKey = PrimaryKey();
+const uniqueKey = UniqueKey();
+const autoIncrement = AutoIncrement();
+const notNull = NotNull();
 
-  /// Creation statement for this index.
-  ///
-  /// Exapmle:
-  /// ```sql
-  /// CREATE UNIQUE INDEX "index_name" ON "foo"("foo_date", "foo_time")
-  /// ```
-  final String createStatement;
-
-  /// [createStatement] exapmle:
-  /// ```sql
-  /// CREATE UNIQUE INDEX "index_name" ON "foo"("foo_date", "foo_time")
-  /// ```
-  const CustomIndex(this.indexName, this.createStatement);
-}
-
+/// An annotation used to configure the behavior of the Drift model generator.
+///
+/// The [UseDrift] annotation allows you to simply generate Drift classes with Plain Old Dart Object.
+/// It provides options for naming conventions, excluding fields, handling enum references, defining unique keys, and specifying foreign keys.
+///
+/// Example usage:
+/// ```dart
+/// @UseDrift(
+///   useSnakeCase: true,
+///   autoReferenceEnums: true,
+///   excludeFields: {'password'},
+///   uniqueKeys: [
+///     {'email'},
+///     {'username', 'accountId'}
+///   ],
+///   foreignKeys: {
+///     'users': [
+///       ['accountId']
+///     ],
+///     'posts': [
+///       ['authorId', 'userId'],
+///       ['categoryId']
+///     ]
+///   },
+///   enumFieldName: 'value',
+///   driftClassName: 'CustomModel',
+///   driftConstructor: 'fromJson',
+/// )
+/// class MyModel extends Table {
+///   // table fields
+/// }
+/// ```
 class UseDrift {
-  /// All generated sql code must use snake case naming in fields and tables names.
+  /// All generated SQL code must use snake case naming in fields and table names.
   final bool useSnakeCase;
 
   /// Whether to automatically create a foreign key constraint on an enum value.
   final bool autoReferenceEnums;
 
-  /// List of fields that must be exluded from drift model.
+  /// List of fields that must be excluded from the Drift model.
   final Set<String> excludeFields;
 
-  /// List of unique keys.
+  /// List of unique keys in the Drift model.
   ///
-  /// Example:
-  /// ```dart
-  /// [{'foo', 'bar'}, {'someUniqueField'}]
-  /// ```
+  /// Each unique key is represented as a set of field names.
+  /// For example, `{'email'}` represents a unique key on the 'email' field,
+  /// while `{'username', 'accountId'}` represents a unique key on both the 'username' and 'accountId' fields.
   final List<Set<String>> uniqueKeys;
 
-  /// Foreign keys map.
+  /// Foreign keys map in the Drift model.
   ///
-  /// Use referenced **table name** (usually plural, ex: `users`, `accounts`)
-  /// as key and reference fields as value.
-  ///
-  /// For every map value, first element of array is FROM **table fields**
-  /// and second element of array is TO **table fields**.
-  /// Do not provide second element of value array, if TO same as FROM.
+  /// The map uses the referenced table name as the key and the reference fields as the value.
+  /// Each value is represented as a list of lists, where the first element is the FROM table fields
+  /// and the second element is the TO table fields.
+  /// If the TO table fields are the same as the FROM table fields, the second element can be omitted.
   ///
   /// Example:
   /// ```dart
-  /// {'foo_bars': [['foo_id', 'omega_id'], ['foo_id', 'bar_id']]}
-  /// ```
-  /// ```dart
-  /// {'foo_bars': [['foo_id']]}
+  /// {'users': [['accountId']]}
+  /// {'posts': [['authorId', 'userId'], ['categoryId']]}
   /// ```
   final Map<String, List<List<String>>> foreignKeys;
 
-  /// When use this annotation on [Enum]s, this name will
-  /// be used as primary key.
+  /// The name of the field to be used as the primary key for [Enum]s when using this annotation.
   final String enumFieldName;
 
-  /// Typically, the generator adds an "s" to the end of the model name.
-  /// You need to use this option if the plural name is incorrect.
+  /// The name of the Drift model class.
+  ///
+  /// By default, the generator adds an "s" to the end of the model name.
+  /// Use this option if the plural name is incorrect.
   final String? driftClassName;
 
+  /// The name of the constructor to be used when deserializing the Drift model from JSON.
   final String? driftConstructor;
 
   const UseDrift({
@@ -76,7 +93,27 @@ class UseDrift {
   });
 }
 
-const useDrift = UseDrift();
+class PrimaryKey implements FieldAnnotation {
+  /// Annotate multiple fields for composite primary keys.
+  ///
+  /// Will be ignored when class has any field annotated by [AutoIncrement].
+  const PrimaryKey();
+}
+
+class UniqueKey implements FieldAnnotation {
+  /// Single unique field constraint. For composite unique keys,
+  /// use [UseDrift.uniqueKeys] instead.
+  const UniqueKey();
+}
+
+class AutoIncrement implements FieldAnnotation {
+  const AutoIncrement();
+}
+
+/// Annotation used to indicate that a field should not be null.
+class NotNull implements FieldAnnotation {
+  const NotNull();
+}
 
 class Computed implements FieldAnnotation {
   const Computed(this.sql);
@@ -99,35 +136,30 @@ class ReferencedBy implements FieldAnnotation {
   const ReferencedBy(this.fieldNames, [this.toFieldNames]);
 }
 
-class AutoIncrement implements FieldAnnotation {
-  const AutoIncrement();
-}
-
-const autoIncrement = AutoIncrement();
-
 class WithDefault implements FieldAnnotation {
   final dynamic defaultValue;
 
-  /// Use `'now()'` or `'current_timestamp'`
+  /// Use only `'now()'` or `'current_timestamp'`
   /// for current timestamp.
   ///
   /// Will be ignored when this field annotated by [AutoIncrement].
   const WithDefault(this.defaultValue);
 }
 
-class PrimaryKey implements FieldAnnotation {
-  /// Annotate multiple fields for composite primary keys.
+class CustomIndex implements FieldAnnotation {
+  final String indexName;
+
+  /// Creation statement for this index.
   ///
-  /// Will be ignored when class has any field annotated by [AutoIncrement].
-  const PrimaryKey();
+  /// Example:
+  /// ```sql
+  /// CREATE UNIQUE INDEX "index_name" ON "foo"("foo_date", "foo_time")
+  /// ```
+  final String createStatement;
+
+  /// [createStatement] example:
+  /// ```sql
+  /// CREATE UNIQUE INDEX "index_name" ON "foo"("foo_date", "foo_time")
+  /// ```
+  const CustomIndex(this.indexName, this.createStatement);
 }
-
-const primaryKey = PrimaryKey();
-
-class UniqueKey implements FieldAnnotation {
-  /// Single unique field constraint. For composite unique keys,
-  /// use [UseDrift.uniqueKeys] insted.
-  const UniqueKey();
-}
-
-const uniqueKey = UniqueKey();

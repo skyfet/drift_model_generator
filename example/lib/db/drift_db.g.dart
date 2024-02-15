@@ -3,6 +3,243 @@
 part of 'drift_db.dart';
 
 // ignore_for_file: type=lint
+class $UsersTable extends Users with TableInfo<$UsersTable, User> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UsersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
+      'user_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [userId, name];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'users';
+  @override
+  VerificationContext validateIntegrity(Insertable<User> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => const {};
+  @override
+  User map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return User(
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}user_id']),
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name']),
+    );
+  }
+
+  @override
+  $UsersTable createAlias(String alias) {
+    return $UsersTable(attachedDatabase, alias);
+  }
+}
+
+class UsersCompanion extends UpdateCompanion<User> {
+  final Value<int?> userId;
+  final Value<String?> name;
+  final Value<int> rowid;
+  const UsersCompanion({
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UsersCompanion.insert({
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<User> custom({
+    Expression<int>? userId,
+    Expression<String>? name,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (name != null) 'name': name,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UsersCompanion copyWith(
+      {Value<int?>? userId, Value<String?>? name, Value<int>? rowid}) {
+    return UsersCompanion(
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<int>(userId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UsersCompanion(')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EntitiesTable extends Entities with TableInfo<$EntitiesTable, Entity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EntitiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entityIdMeta =
+      const VerificationMeta('entityId');
+  @override
+  late final GeneratedColumn<int> entityId = GeneratedColumn<int>(
+      'entity_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [entityId, name];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'entities';
+  @override
+  VerificationContext validateIntegrity(Insertable<Entity> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entity_id')) {
+      context.handle(_entityIdMeta,
+          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => const {};
+  @override
+  Entity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Entity(
+      entityId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}entity_id']),
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name']),
+    );
+  }
+
+  @override
+  $EntitiesTable createAlias(String alias) {
+    return $EntitiesTable(attachedDatabase, alias);
+  }
+}
+
+class EntitiesCompanion extends UpdateCompanion<Entity> {
+  final Value<int?> entityId;
+  final Value<String?> name;
+  final Value<int> rowid;
+  const EntitiesCompanion({
+    this.entityId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EntitiesCompanion.insert({
+    this.entityId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<Entity> custom({
+    Expression<int>? entityId,
+    Expression<String>? name,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entityId != null) 'entity_id': entityId,
+      if (name != null) 'name': name,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EntitiesCompanion copyWith(
+      {Value<int?>? entityId, Value<String?>? name, Value<int>? rowid}) {
+    return EntitiesCompanion(
+      entityId: entityId ?? this.entityId,
+      name: name ?? this.name,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entityId.present) {
+      map['entity_id'] = Variable<int>(entityId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntitiesCompanion(')
+          ..write('entityId: $entityId, ')
+          ..write('name: $name, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ExampleTypesTable extends ExampleTypes
     with TableInfo<$ExampleTypesTable, ExampleType> {
   @override
@@ -17,9 +254,10 @@ class $ExampleTypesTable extends ExampleTypes
   @override
   List<GeneratedColumn> get $columns => [name];
   @override
-  String get aliasedName => _alias ?? 'example_types';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'example_types';
+  String get actualTableName => $name;
+  static const String $name = 'example_types';
   @override
   VerificationContext validateIntegrity(Insertable<ExampleType> instance,
       {bool isInserting = false}) {
@@ -151,157 +389,32 @@ class ExampleTypesCompanion extends UpdateCompanion<ExampleType> {
   }
 }
 
-class $EntitiesTable extends Entities with TableInfo<$EntitiesTable, Entity> {
+class $ExampleRecordsTable extends ExampleRecords
+    with TableInfo<$ExampleRecordsTable, ExampleRecord> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $EntitiesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _entityIdMeta =
-      const VerificationMeta('entityId');
+  $ExampleRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> entityId = GeneratedColumn<int>(
-      'entity_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  @override
-  List<GeneratedColumn> get $columns => [entityId, name];
-  @override
-  String get aliasedName => _alias ?? 'entities';
-  @override
-  String get actualTableName => 'entities';
-  @override
-  VerificationContext validateIntegrity(Insertable<Entity> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('entity_id')) {
-      context.handle(_entityIdMeta,
-          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
-    } else if (isInserting) {
-      context.missing(_entityIdMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => const {};
-  @override
-  Entity map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Entity(
-      entityId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}entity_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-    );
-  }
-
-  @override
-  $EntitiesTable createAlias(String alias) {
-    return $EntitiesTable(attachedDatabase, alias);
-  }
-}
-
-class EntitiesCompanion extends UpdateCompanion<Entity> {
-  final Value<int> entityId;
-  final Value<String> name;
-  final Value<int> rowid;
-  const EntitiesCompanion({
-    this.entityId = const Value.absent(),
-    this.name = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  EntitiesCompanion.insert({
-    required int entityId,
-    required String name,
-    this.rowid = const Value.absent(),
-  })  : entityId = Value(entityId),
-        name = Value(name);
-  static Insertable<Entity> custom({
-    Expression<int>? entityId,
-    Expression<String>? name,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (entityId != null) 'entity_id': entityId,
-      if (name != null) 'name': name,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  EntitiesCompanion copyWith(
-      {Value<int>? entityId, Value<String>? name, Value<int>? rowid}) {
-    return EntitiesCompanion(
-      entityId: entityId ?? this.entityId,
-      name: name ?? this.name,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (entityId.present) {
-      map['entity_id'] = Variable<int>(entityId.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('EntitiesCompanion(')
-          ..write('entityId: $entityId, ')
-          ..write('name: $name, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $ExamplesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _exampleIdMeta =
-      const VerificationMeta('exampleId');
-  @override
-  late final GeneratedColumn<int> exampleId = GeneratedColumn<int>(
-      'example_id', aliasedName, false,
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
       hasAutoIncrement: true,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _exampleNumberMeta =
-      const VerificationMeta('exampleNumber');
+  static const VerificationMeta _numberMeta = const VerificationMeta('number');
   @override
-  late final GeneratedColumn<String> exampleNumber = GeneratedColumn<String>(
-      'example_number', aliasedName, false,
+  late final GeneratedColumn<String> number = GeneratedColumn<String>(
+      'number', aliasedName, true,
       type: DriftSqlType.string,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
-  static const VerificationMeta _exampleTypeMeta =
-      const VerificationMeta('exampleType');
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
-  late final GeneratedColumn<String> exampleType = GeneratedColumn<String>(
-      'example_type', aliasedName, true,
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, true,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
@@ -309,35 +422,32 @@ class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
   static const VerificationMeta _isDefaultMeta =
       const VerificationMeta('isDefault');
   @override
-  late final GeneratedColumn<bool> isDefault =
-      GeneratedColumn<bool>('is_default', aliasedName, false,
-          type: DriftSqlType.bool,
-          requiredDuringInsert: false,
-          defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
-            SqlDialect.sqlite: 'CHECK ("is_default" IN (0, 1))',
-            SqlDialect.mysql: '',
-            SqlDialect.postgres: '',
-          }),
-          defaultValue: const Constant(false));
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+      'is_default', aliasedName, true,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_default" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
+      'user_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _entityIdMeta =
       const VerificationMeta('entityId');
   @override
   late final GeneratedColumn<int> entityId = GeneratedColumn<int>(
-      'entity_id', aliasedName, false,
+      'entity_id', aliasedName, true,
       type: DriftSqlType.int,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES entities (entity_id)'));
-  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
-  @override
-  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
-      'user_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
+      'created_at', aliasedName, true,
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
@@ -346,68 +456,46 @@ class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
   @override
   late final GeneratedColumn<bool> hasType = GeneratedColumn<bool>(
       'has_type', aliasedName, false,
-      generatedAs:
-          GeneratedAs(CustomExpression('example_type is not null'), false),
+      generatedAs: GeneratedAs(CustomExpression('type is not null'), false),
       type: DriftSqlType.bool,
       requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
-        SqlDialect.sqlite: 'CHECK ("has_type" IN (0, 1))',
-        SqlDialect.mysql: '',
-        SqlDialect.postgres: '',
-      }));
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("has_type" IN (0, 1))'));
   @override
-  List<GeneratedColumn> get $columns => [
-        exampleId,
-        exampleNumber,
-        exampleType,
-        isDefault,
-        entityId,
-        userId,
-        createdAt,
-        hasType
-      ];
+  List<GeneratedColumn> get $columns =>
+      [id, number, type, isDefault, userId, entityId, createdAt, hasType];
   @override
-  String get aliasedName => _alias ?? 'examples';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'examples';
+  String get actualTableName => $name;
+  static const String $name = 'example_records';
   @override
-  VerificationContext validateIntegrity(Insertable<Example> instance,
+  VerificationContext validateIntegrity(Insertable<ExampleRecord> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('example_id')) {
-      context.handle(_exampleIdMeta,
-          exampleId.isAcceptableOrUnknown(data['example_id']!, _exampleIdMeta));
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('example_number')) {
-      context.handle(
-          _exampleNumberMeta,
-          exampleNumber.isAcceptableOrUnknown(
-              data['example_number']!, _exampleNumberMeta));
-    } else if (isInserting) {
-      context.missing(_exampleNumberMeta);
+    if (data.containsKey('number')) {
+      context.handle(_numberMeta,
+          number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     }
-    if (data.containsKey('example_type')) {
+    if (data.containsKey('type')) {
       context.handle(
-          _exampleTypeMeta,
-          exampleType.isAcceptableOrUnknown(
-              data['example_type']!, _exampleTypeMeta));
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
     }
     if (data.containsKey('is_default')) {
       context.handle(_isDefaultMeta,
           isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta));
     }
-    if (data.containsKey('entity_id')) {
-      context.handle(_entityIdMeta,
-          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
-    } else if (isInserting) {
-      context.missing(_entityIdMeta);
-    }
     if (data.containsKey('user_id')) {
       context.handle(_userIdMeta,
           userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
-    } else if (isInserting) {
-      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(_entityIdMeta,
+          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -421,99 +509,97 @@ class $ExamplesTable extends Examples with TableInfo<$ExamplesTable, Example> {
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {exampleId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Example map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ExampleRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Example.fromDb(
-      exampleId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}example_id'])!,
-      exampleNumber: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}example_number'])!,
+    return ExampleRecord.fromDb(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      number: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}number']),
       isDefault: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_default'])!,
-      entityId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}entity_id'])!,
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_default']),
       userId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}user_id'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}user_id']),
       createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at']),
       hasType: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}has_type'])!,
-      exampleType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}example_type']),
+      entityId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}entity_id']),
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type']),
     );
   }
 
   @override
-  $ExamplesTable createAlias(String alias) {
-    return $ExamplesTable(attachedDatabase, alias);
+  $ExampleRecordsTable createAlias(String alias) {
+    return $ExampleRecordsTable(attachedDatabase, alias);
   }
 }
 
-class ExamplesCompanion extends UpdateCompanion<Example> {
-  final Value<int> exampleId;
-  final Value<String> exampleNumber;
-  final Value<String?> exampleType;
-  final Value<bool> isDefault;
-  final Value<int> entityId;
-  final Value<int> userId;
-  final Value<DateTime> createdAt;
-  const ExamplesCompanion({
-    this.exampleId = const Value.absent(),
-    this.exampleNumber = const Value.absent(),
-    this.exampleType = const Value.absent(),
+class ExampleRecordsCompanion extends UpdateCompanion<ExampleRecord> {
+  final Value<int> id;
+  final Value<String?> number;
+  final Value<String?> type;
+  final Value<bool?> isDefault;
+  final Value<int?> userId;
+  final Value<int?> entityId;
+  final Value<DateTime?> createdAt;
+  const ExampleRecordsCompanion({
+    this.id = const Value.absent(),
+    this.number = const Value.absent(),
+    this.type = const Value.absent(),
     this.isDefault = const Value.absent(),
-    this.entityId = const Value.absent(),
     this.userId = const Value.absent(),
+    this.entityId = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
-  ExamplesCompanion.insert({
-    this.exampleId = const Value.absent(),
-    required String exampleNumber,
-    this.exampleType = const Value.absent(),
+  ExampleRecordsCompanion.insert({
+    this.id = const Value.absent(),
+    this.number = const Value.absent(),
+    this.type = const Value.absent(),
     this.isDefault = const Value.absent(),
-    required int entityId,
-    required int userId,
+    this.userId = const Value.absent(),
+    this.entityId = const Value.absent(),
     this.createdAt = const Value.absent(),
-  })  : exampleNumber = Value(exampleNumber),
-        entityId = Value(entityId),
-        userId = Value(userId);
-  static Insertable<Example> custom({
-    Expression<int>? exampleId,
-    Expression<String>? exampleNumber,
-    Expression<String>? exampleType,
+  });
+  static Insertable<ExampleRecord> custom({
+    Expression<int>? id,
+    Expression<String>? number,
+    Expression<String>? type,
     Expression<bool>? isDefault,
-    Expression<int>? entityId,
     Expression<int>? userId,
+    Expression<int>? entityId,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
-      if (exampleId != null) 'example_id': exampleId,
-      if (exampleNumber != null) 'example_number': exampleNumber,
-      if (exampleType != null) 'example_type': exampleType,
+      if (id != null) 'id': id,
+      if (number != null) 'number': number,
+      if (type != null) 'type': type,
       if (isDefault != null) 'is_default': isDefault,
-      if (entityId != null) 'entity_id': entityId,
       if (userId != null) 'user_id': userId,
+      if (entityId != null) 'entity_id': entityId,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
 
-  ExamplesCompanion copyWith(
-      {Value<int>? exampleId,
-      Value<String>? exampleNumber,
-      Value<String?>? exampleType,
-      Value<bool>? isDefault,
-      Value<int>? entityId,
-      Value<int>? userId,
-      Value<DateTime>? createdAt}) {
-    return ExamplesCompanion(
-      exampleId: exampleId ?? this.exampleId,
-      exampleNumber: exampleNumber ?? this.exampleNumber,
-      exampleType: exampleType ?? this.exampleType,
+  ExampleRecordsCompanion copyWith(
+      {Value<int>? id,
+      Value<String?>? number,
+      Value<String?>? type,
+      Value<bool?>? isDefault,
+      Value<int?>? userId,
+      Value<int?>? entityId,
+      Value<DateTime?>? createdAt}) {
+    return ExampleRecordsCompanion(
+      id: id ?? this.id,
+      number: number ?? this.number,
+      type: type ?? this.type,
       isDefault: isDefault ?? this.isDefault,
-      entityId: entityId ?? this.entityId,
       userId: userId ?? this.userId,
+      entityId: entityId ?? this.entityId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -521,23 +607,23 @@ class ExamplesCompanion extends UpdateCompanion<Example> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (exampleId.present) {
-      map['example_id'] = Variable<int>(exampleId.value);
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
     }
-    if (exampleNumber.present) {
-      map['example_number'] = Variable<String>(exampleNumber.value);
+    if (number.present) {
+      map['number'] = Variable<String>(number.value);
     }
-    if (exampleType.present) {
-      map['example_type'] = Variable<String>(exampleType.value);
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
     }
     if (isDefault.present) {
       map['is_default'] = Variable<bool>(isDefault.value);
     }
-    if (entityId.present) {
-      map['entity_id'] = Variable<int>(entityId.value);
-    }
     if (userId.present) {
       map['user_id'] = Variable<int>(userId.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<int>(entityId.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -547,13 +633,13 @@ class ExamplesCompanion extends UpdateCompanion<Example> {
 
   @override
   String toString() {
-    return (StringBuffer('ExamplesCompanion(')
-          ..write('exampleId: $exampleId, ')
-          ..write('exampleNumber: $exampleNumber, ')
-          ..write('exampleType: $exampleType, ')
+    return (StringBuffer('ExampleRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('number: $number, ')
+          ..write('type: $type, ')
           ..write('isDefault: $isDefault, ')
-          ..write('entityId: $entityId, ')
           ..write('userId: $userId, ')
+          ..write('entityId: $entityId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -562,13 +648,14 @@ class ExamplesCompanion extends UpdateCompanion<Example> {
 
 abstract class _$ExampleDatabase extends GeneratedDatabase {
   _$ExampleDatabase(QueryExecutor e) : super(e);
-  late final $ExampleTypesTable exampleTypes = $ExampleTypesTable(this);
+  late final $UsersTable users = $UsersTable(this);
   late final $EntitiesTable entities = $EntitiesTable(this);
-  late final $ExamplesTable examples = $ExamplesTable(this);
+  late final $ExampleTypesTable exampleTypes = $ExampleTypesTable(this);
+  late final $ExampleRecordsTable exampleRecords = $ExampleRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [exampleTypes, entities, examples];
+      [users, entities, exampleTypes, exampleRecords];
 }
