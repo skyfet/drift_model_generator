@@ -6,40 +6,19 @@ import 'package:drift_model_generator/src/utils/types.dart';
 import 'package:source_gen/source_gen.dart';
 
 class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
-  Set<String> additionalImports = {};
+  // Set<String> additionalImports = {};
 
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
-    additionalImports.clear();
+    // additionalImports.clear();
 
-    final elements = library.annotatedWith(TypeChecker.fromRuntime(UseDrift));
-
-    final Set<String> sources = {};
-    for (var anElement in elements) {
-      final element = anElement.element;
-      if (element is ClassElement) {
-        sources.add(element.source.uri.toString());
-      }
-    }
     final buffer = StringBuffer();
 
-    if (elements.isNotEmpty) {
-      buffer.writeln("import 'package:drift/drift.dart';");
-    }
+    final fileName = library.element.source.uri.pathSegments.last;
+
+    buffer.writeln("part of \"$fileName\";");
 
     final generated = await super.generate(library, buildStep);
-
-    sources
-      ..addAll(additionalImports)
-      ..remove(
-        library.element.source.uri.toString().replaceAll('.dart', '.driftm.dart'),
-      );
-
-    for (var source in sources) {
-      buffer
-        ..writeln("import '$source';")
-        ..writeln();
-    }
 
     buffer.writeln(generated);
 
@@ -64,113 +43,137 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
             annotation: ann,
             element: element,
           ),
-        );
-    } else if (element is ClassElement) {
-      buffer
-        ..writeln()
-        ..write('@UseRowClass($modelName')
-        ..write(
-          ann.driftConstructor != null ? ', constructor: "${ann.driftConstructor}")' : ')',
         )
-        ..writeln(
-          'class ${ann.driftClassName ?? '${modelName}s'} extends Table {',
-        );
+        ..writeln('}');
 
-      final variables = Iterable.castFrom<VariableElement, VariableElement>(element.fields.isEmpty
+      return buffer.toString();
+    } else if (element is! ClassElement) {
+      throw UnsupportedError(
+        '${element.runtimeType} is not supported. Remove @UseDrift annotation',
+      );
+    }
+
+    final generatedClassName = ann.driftClassName ?? '${modelName}s';
+
+    buffer
+      ..writeln()
+      ..write('@UseRowClass($modelName')
+      ..write(
+        ann.driftConstructor != null ? ', constructor: "${ann.driftConstructor}")' : ')',
+      )
+      ..writeln(
+        'class $generatedClassName extends Table {',
+      );
+
+    final variables = Iterable.castFrom<VariableElement, VariableElement>(
+      element.fields.isEmpty
           ? element.constructors
               .firstWhere((c) => c.displayName == element.name)
               .children
               .cast<ParameterElement>()
-          : element.fields);
+          : element.fields,
+    );
 
-      final primaryKeys = _readPrimaries(variables);
-      final allReferences = _readReferences(
-        variables: variables,
-        excludeFields: ann.excludeFields,
-      ).toList()
-        ..addAll(
-          ann.foreignKeys
-              .map(
-                (referencedTable, references) => MapEntry(
-                  '',
-                  Reference(
-                    fromFields: references.first,
-                    toFields: references.length == 1 ? references.first : references.last,
-                    toDriftClass: referencedTable,
-                    allowModelReference: false,
-                  ),
+    final primaryKeys = _readPrimaries(variables);
+    final allReferences = _readReferences(
+      variables: variables,
+      excludeFields: ann.excludeFields,
+    ).toList()
+      ..addAll(
+        ann.foreignKeys
+            .map(
+              (referencedTable, references) => MapEntry(
+                '',
+                Reference(
+                  fromFields: references.first,
+                  toFields: references.length == 1 ? references.first : references.last,
+                  toDriftClass: referencedTable,
+                  allowModelReference: false,
                 ),
-              )
-              .values,
-        );
-
-      if (ann.autoReferenceEnums) {
-        allReferences.addAll(
-          _autoReference(
-            variables: variables,
-            currentReferences: allReferences.toList(),
-          ),
-        );
-      }
-
-      bool hasAnyAutoIncremented = false;
-
-      _mapVariables(
-        buffer: buffer,
-        annotation: ann,
-        hasAnyAutoIncremented: hasAnyAutoIncremented,
-        variables: variables,
-        allReferences: allReferences,
-        primaryKeys: primaryKeys,
+              ),
+            )
+            .values,
       );
 
-      if (primaryKeys.isNotEmpty) {
-        buffer
-          ..writeln()
-          ..writeln()
-          ..writeln('@override')
-          ..write('Set<Column<Object>> get primaryKey => {')
-          ..write(primaryKeys.join(', '))
-          ..write('};');
-      }
-
-      final compositeUniques = ann.uniqueKeys.where((uk) => uk.length > 1);
-      if (compositeUniques.isNotEmpty) {
-        buffer
-          ..writeln()
-          ..writeln()
-          ..writeln('@override')
-          ..writeln('List<Set<Column<Object>>> get uniqueKeys => [');
-        for (var uk in compositeUniques) {
-          buffer
-            ..writeln('{')
-            ..write(uk.join(', '))
-            ..write('}${compositeUniques.length > 1 ? ',' : ''}');
-        }
-        buffer.writeln('];');
-      }
-
-      final compositeReferences = allReferences.where(
-        (ref) => ref.composite || !ref.allowModelReference,
+    if (ann.autoReferenceEnums) {
+      allReferences.addAll(
+        _autoReference(
+          variables: variables,
+          currentReferences: allReferences.toList(),
+        ),
       );
+    }
 
-      if (compositeReferences.isNotEmpty) {
+    bool hasAnyAutoIncremented = false;
+
+    final variablesData = _mapVariables(
+      annotation: ann,
+      hasAnyAutoIncremented: hasAnyAutoIncremented,
+      variables: variables,
+      allReferences: allReferences,
+      primaryKeys: primaryKeys,
+    );
+
+    buffer.writeAll(variablesData.map((vd) => vd.toDriftLine()));
+
+    if (primaryKeys.isNotEmpty) {
+      buffer
+        ..writeln()
+        ..writeln()
+        ..writeln('@override')
+        ..write('Set<Column<Object>> get primaryKey => {')
+        ..write(primaryKeys.join(', '))
+        ..write('};');
+    }
+
+    final compositeUniques = ann.uniqueKeys.where((uk) => uk.length > 1);
+    if (compositeUniques.isNotEmpty) {
+      buffer
+        ..writeln()
+        ..writeln()
+        ..writeln('@override')
+        ..writeln('List<Set<Column<Object>>> get uniqueKeys => [');
+      for (var uk in compositeUniques) {
         buffer
-          ..writeln()
-          ..writeln()
-          ..writeln('@override')
-          ..writeln('List<String> get customConstraints => [');
-        for (var fk in compositeReferences) {
-          buffer
-            ..write("'")
-            ..write(fk.toSql(useSnake: ann.useSnakeCase))
-            ..write("',");
-        }
-        buffer.writeln('];');
+          ..writeln('{')
+          ..write(uk.join(', '))
+          ..write('}${compositeUniques.length > 1 ? ',' : ''}');
       }
+      buffer.writeln('];');
+    }
+
+    final compositeReferences = allReferences.where(
+      (ref) => ref.composite || !ref.allowModelReference,
+    );
+
+    if (compositeReferences.isNotEmpty) {
+      buffer
+        ..writeln()
+        ..writeln()
+        ..writeln('@override')
+        ..writeln('List<String> get customConstraints => [');
+      for (var fk in compositeReferences) {
+        buffer
+          ..write("'")
+          ..write(fk.toSql(useSnake: ann.useSnakeCase))
+          ..write("',");
+      }
+      buffer.writeln('];');
     }
 
     buffer.writeln('}');
+
+    buffer.writeln(
+      DmgExtensionsBuilder(
+        className: element.name,
+        generatedClassName: generatedClassName,
+      ).build(
+        variablesData,
+        useSnakeCase: ann.useSnakeCase,
+      ),
+    );
+
+    buffer.writeln(passNullableInputMethod);
 
     return buffer.toString();
   }
@@ -205,118 +208,35 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
             toDriftClass: targetClassName,
           );
 
-          additionalImports.add(
-            targetElement.source.uri.toString().replaceAll('.dart', '.driftm.dart'),
-          );
+          // additionalImports.add(
+          //   targetElement.source.uri.toString().replaceAll('.dart', '.driftm.dart'),
+          // );
         }
       }
     }
   }
 
-  void _mapVariables({
+  Iterable<VariableData> _mapVariables({
     required Iterable<VariableElement> variables,
     required bool hasAnyAutoIncremented,
     required Iterable<String> primaryKeys,
-    required StringBuffer buffer,
     required Iterable<Reference> allReferences,
     required UseDrift annotation,
-  }) {
+  }) sync* {
     for (var variable in variables) {
       if (annotation.excludeFields.contains(variable.name)) {
         continue;
       }
 
-      final annotations =
-          TypeChecker.fromRuntime(FieldAnnotation).annotationsOf(variable).map(ConstantReader.new);
-
-      final computed = annotations.whereOf<Computed>().isNotEmpty
-          ? ComputedReader.readAnnotation(annotations.whereOf<Computed>().single)
-          : null;
-
-      final isAutoIncremented = annotations.whereOf<AutoIncrement>().isNotEmpty;
-
-      if (isAutoIncremented) hasAnyAutoIncremented = isAutoIncremented;
-
-      // TODO: fix when auto incremented after primary
-      final isPrimary = !hasAnyAutoIncremented && primaryKeys.contains(variable.name);
-
-      dynamic defaultValue;
-      // ignore default value then this field auto incremented
-      final defaultValueAnnotations = annotations.whereOf<WithDefault>();
-      if (!isAutoIncremented && defaultValueAnnotations.isNotEmpty) {
-        defaultValue = defaultValueAnnotations.single.read('defaultValue').literalValue;
-      }
-      final nullable = !isAutoIncremented &&
-          !isPrimary &&
-          variable.type.nullabilitySuffix != NullabilitySuffix.none;
-
-      final driftType = DriftType.fromDartType(variable.type);
-      buffer
-        ..writeln(driftType.columnType)
-        ..write(' get ')
-        ..write(variable.name)
-        ..write(' => ')
-        ..write(driftType.builderName)
-        ..write('()');
-
-      if (computed != null) {
-        buffer.write('.generatedAs(');
-        buffer.write('CustomExpression(\'');
-        buffer.write(computed.sql);
-        buffer.write("'),)();");
-        continue;
-      }
-
-      if (isAutoIncremented) {
-        buffer.write('.autoIncrement()();');
-        continue;
-      }
-
-      if (defaultValue != null) {
-        buffer
-          ..write('.withDefault(')
-          ..write(
-            defaultValue is String
-                ? ['current_timestamp', 'now()'].contains(defaultValue.toLowerCase())
-                    ? 'currentDateAndTime'
-                    : 'const Constant("$defaultValue")'
-                : 'const Constant($defaultValue)',
-          )
-          ..write(')');
-      }
-
-      final references = allReferences
-          .where(
-            (ref) =>
-                ref.fromFields.contains(variable.name) && ref.single && ref.allowModelReference,
-          )
-          .toList();
-
-      if (references.isNotEmpty) {
-        for (var reference in references) {
-          final fieldIndex = reference.fromFields.indexOf(variable.name);
-          buffer
-            ..write('.references(')
-            ..write(reference.toDriftClass)
-            ..write(', #')
-            ..write(reference.toFields.elementAt(fieldIndex))
-            ..write(')');
-        }
-      }
-
-      final uniqueKeyIndex = annotation.uniqueKeys.indexWhere(
-        (u) => u.contains(variable.name) && u.length == 1,
+      final variableData = VariableData.from(
+        variable: variable,
+        allReferences: allReferences,
+        hasAnyAutoIncremented: hasAnyAutoIncremented,
+        primaryKeys: primaryKeys,
+        annotation: annotation,
       );
-      if (uniqueKeyIndex > -1 ||
-          TypeChecker.fromRuntime(UniqueKey).annotationsOf(variable).isNotEmpty) {
-        buffer.write('.unique()');
-      }
 
-      if (!isPrimary && nullable) {
-        buffer.write('.nullable()');
-      }
-
-      buffer.write('();');
+      yield variableData;
     }
   }
 
@@ -383,11 +303,11 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
 
       excludeFields.add(variable.name);
 
-      if (fromFields.length == 1 && variable.type.element?.source != null) {
-        additionalImports.add(
-          variable.type.element!.source!.uri.toString().replaceAll('.dart', '.driftm.dart'),
-        );
-      }
+      // if (fromFields.length == 1 && variable.type.element?.source != null) {
+      //   additionalImports.add(
+      //     variable.type.element!.source!.uri.toString().replaceAll('.dart', '.driftm.dart'),
+      //   );
+      // }
     }
   }
 
@@ -511,3 +431,235 @@ extension UseDriftReader on UseDrift {
     );
   }
 }
+
+class VariableData {
+  final VariableElement element;
+
+  final String columnType;
+  final String builderName;
+  final dynamic columnDefaultValue;
+  final bool hasAutoIncrementMark;
+  final List<Reference> references;
+  final bool hasUniqueMark;
+  final bool hasNotNullMark;
+  final String? computedSql;
+
+  final bool isFieldNullable;
+
+  String get name => element.name;
+  bool get isEnum => element.type.element is EnumElement?;
+  bool get hasDefault => columnDefaultValue != null;
+  bool get isComputedColumn => computedSql != null;
+  bool get isColumnNullable => !hasNotNullMark && !hasAutoIncrementMark && isFieldNullable;
+  bool get isRequiredOnInsert =>
+      isFieldNullable &&
+      !(isColumnNullable || hasAutoIncrementMark || isComputedColumn || hasDefault);
+
+  VariableData({
+    required this.element,
+    required this.columnType,
+    required this.builderName,
+    required this.references,
+    this.columnDefaultValue,
+    this.hasAutoIncrementMark = false,
+    // this.isColumnPrimaryKey = false,
+    this.computedSql,
+    this.hasUniqueMark = false,
+    this.hasNotNullMark = false,
+    this.isFieldNullable = false,
+  });
+
+  factory VariableData.from({
+    required VariableElement variable,
+    required Iterable<Reference> allReferences,
+    required bool hasAnyAutoIncremented,
+    required Iterable<String> primaryKeys,
+    required UseDrift annotation,
+  }) {
+    final annotations =
+        TypeChecker.fromRuntime(FieldAnnotation).annotationsOf(variable).map(ConstantReader.new);
+
+    final isAutoIncremented = annotations.whereOf<AutoIncrement>().isNotEmpty;
+
+    if (isAutoIncremented) hasAnyAutoIncremented = isAutoIncremented;
+
+    // final isPrimaryKey = !hasAnyAutoIncremented && primaryKeys.contains(variable.name);
+
+    dynamic defaultValue;
+    final defaultValueAnnotations = annotations.whereOf<WithDefault>();
+    if (!isAutoIncremented && defaultValueAnnotations.isNotEmpty) {
+      defaultValue = defaultValueAnnotations.single.read('defaultValue').literalValue;
+    }
+
+    final driftType = DriftType.fromDartType(variable.type);
+
+    String? computedSql;
+    final computed = annotations.whereOf<Computed>().isNotEmpty
+        ? ComputedReader.readAnnotation(annotations.whereOf<Computed>().single)
+        : null;
+
+    if (computed != null) {
+      computedSql = computed.sql;
+    }
+
+    final references = allReferences
+        .where((ref) =>
+            ref.fromFields.contains(variable.name) && ref.single && ref.allowModelReference)
+        .toList();
+
+    final uniqueKeyIndex = annotation.uniqueKeys.indexWhere(
+      (u) => u.contains(variable.name) && u.length == 1,
+    );
+    final isUnique = uniqueKeyIndex > -1 ||
+        TypeChecker.fromRuntime(UniqueKey).annotationsOf(variable).isNotEmpty;
+
+    final isNotNull = annotations.whereOf<NotNull>().isNotEmpty;
+
+    return VariableData(
+      element: variable,
+      columnType: driftType.columnType,
+      builderName: driftType.builderName,
+      isFieldNullable: variable.type.nullabilitySuffix != NullabilitySuffix.none,
+      // isColumnPrimaryKey: isPrimaryKey,
+      computedSql: computedSql,
+      columnDefaultValue: defaultValue,
+      hasAutoIncrementMark: isAutoIncremented,
+      hasUniqueMark: isUnique,
+      hasNotNullMark: isNotNull,
+      references: references,
+    );
+  }
+
+  StringBuffer toDriftLine() {
+    final buffer = StringBuffer();
+
+    buffer
+      ..writeln(columnType)
+      ..write(' get ')
+      ..write(name)
+      ..write(' => ')
+      ..write(builderName)
+      ..write('()');
+
+    if (computedSql != null) {
+      buffer
+        ..write('.generatedAs(')
+        ..write('CustomExpression(\'')
+        ..write(computedSql)
+        ..write("'),)();");
+      return buffer;
+    }
+
+    if (hasAutoIncrementMark) {
+      buffer.write('.autoIncrement()();');
+      return buffer;
+    }
+
+    if (columnDefaultValue != null) {
+      buffer
+        ..write('.withDefault(')
+        ..write(
+          columnDefaultValue is String
+              ? ['current_timestamp', 'now()'].contains(columnDefaultValue.toLowerCase())
+                  ? 'currentDateAndTime'
+                  : 'const Constant("$columnDefaultValue")'
+              : 'const Constant($columnDefaultValue)',
+        )
+        ..write(')');
+    }
+
+    if (references.isNotEmpty) {
+      for (var reference in references) {
+        final fieldIndex = reference.fromFields.indexOf(name);
+        buffer
+          ..write('.references(')
+          ..write(reference.toDriftClass)
+          ..write(', #')
+          ..write(reference.toFields.elementAt(fieldIndex))
+          ..write(')');
+      }
+    }
+
+    if (hasUniqueMark) {
+      buffer.write('.unique()');
+    }
+
+    if (isFieldNullable) {
+      buffer.write('.nullable()');
+    }
+
+    buffer.write('();');
+    return buffer;
+  }
+}
+
+class DmgExtensionsBuilder {
+  final String className;
+  final String generatedClassName;
+
+  DmgExtensionsBuilder({required this.className, required this.generatedClassName});
+
+  StringBuffer build(Iterable<VariableData> variables, {bool useSnakeCase = false}) {
+    final buffer = StringBuffer();
+
+    // Extension Declaration
+    buffer.writeln('extension ${generatedClassName}DriftModelGeneratorExtension on $className {');
+
+    // assertRequired method
+    buffer.writeln('void assertRequiredOnInsert() {');
+    for (var variable in variables.where((v) => v.isRequiredOnInsert)) {
+      buffer.writeln(
+        'assert(${variable.name} != null, MissingRequiredFieldError(\'${variable.name}\'));',
+      );
+    }
+    buffer.writeln('}\n');
+
+    // toCompanion method
+    buffer
+      ..writeln('/// Accepts [allowNulls] set of field names for which null values')
+      ..writeln('/// are allowed, otherwise use [Value.absent()].')
+      ..writeln(
+        '${generatedClassName}Companion toCompanion([Set<String> allowNulls = const {}]) {',
+      )
+      ..writeln('return ${generatedClassName}Companion(');
+
+    for (var variable in variables.where((variable) => variable.computedSql == null)) {
+      final variableName = variable.name;
+
+      final valueGetter = variable.isEnum
+          ? useSnakeCase
+              ? '${_escapeNull(variable)}.snakeName'
+              : '${_escapeNull(variable)}.name'
+          : variableName;
+
+      buffer.writeln(
+        '$variableName: _passNullableInput(\'$variableName\', $valueGetter, allowNulls, ${variable.isColumnNullable}),',
+      );
+    }
+    buffer.writeln(');');
+    buffer.writeln('}\n');
+
+    // Closing the extension
+    buffer.writeln('}');
+
+    return buffer;
+  }
+
+  String _escapeNull(VariableData variable) =>
+      variable.isFieldNullable ? '${variable.name}?' : variable.name;
+}
+
+const passNullableInputMethod = '''
+Value<T> _passNullableInput<T>(String name, T? value, Set<String> allowNulls, bool nullableColumn) {
+  if (value != null) return Value(value);
+  if (allowNulls.contains(name)) {
+    if (nullableColumn) {
+      return Value(value as T);
+    }
+
+    throw NonNullableFieldIsAllowedNull(name);
+  }
+
+  return Value.absent();
+}
+''';

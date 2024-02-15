@@ -12,12 +12,14 @@ part of 'entity.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$Entity {
-  int get entityId => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
+  @notNull
+  int? get entityId => throw _privateConstructorUsedError;
+  @notNull
+  String? get name => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $EntityCopyWith<Entity> get copyWith => throw _privateConstructorUsedError;
@@ -28,7 +30,7 @@ abstract class $EntityCopyWith<$Res> {
   factory $EntityCopyWith(Entity value, $Res Function(Entity) then) =
       _$EntityCopyWithImpl<$Res, Entity>;
   @useResult
-  $Res call({int entityId, String name});
+  $Res call({@notNull int? entityId, @notNull String? name});
 }
 
 /// @nodoc
@@ -44,66 +46,70 @@ class _$EntityCopyWithImpl<$Res, $Val extends Entity>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? entityId = null,
-    Object? name = null,
+    Object? entityId = freezed,
+    Object? name = freezed,
   }) {
     return _then(_value.copyWith(
-      entityId: null == entityId
+      entityId: freezed == entityId
           ? _value.entityId
           : entityId // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
+              as int?,
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$_EntityCopyWith<$Res> implements $EntityCopyWith<$Res> {
-  factory _$$_EntityCopyWith(_$_Entity value, $Res Function(_$_Entity) then) =
-      __$$_EntityCopyWithImpl<$Res>;
+abstract class _$$EntityImplCopyWith<$Res> implements $EntityCopyWith<$Res> {
+  factory _$$EntityImplCopyWith(
+          _$EntityImpl value, $Res Function(_$EntityImpl) then) =
+      __$$EntityImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int entityId, String name});
+  $Res call({@notNull int? entityId, @notNull String? name});
 }
 
 /// @nodoc
-class __$$_EntityCopyWithImpl<$Res>
-    extends _$EntityCopyWithImpl<$Res, _$_Entity>
-    implements _$$_EntityCopyWith<$Res> {
-  __$$_EntityCopyWithImpl(_$_Entity _value, $Res Function(_$_Entity) _then)
+class __$$EntityImplCopyWithImpl<$Res>
+    extends _$EntityCopyWithImpl<$Res, _$EntityImpl>
+    implements _$$EntityImplCopyWith<$Res> {
+  __$$EntityImplCopyWithImpl(
+      _$EntityImpl _value, $Res Function(_$EntityImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? entityId = null,
-    Object? name = null,
+    Object? entityId = freezed,
+    Object? name = freezed,
   }) {
-    return _then(_$_Entity(
-      entityId: null == entityId
+    return _then(_$EntityImpl(
+      entityId: freezed == entityId
           ? _value.entityId
           : entityId // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
+              as int?,
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ));
   }
 }
 
 /// @nodoc
 
-class _$_Entity implements _Entity {
-  const _$_Entity({required this.entityId, required this.name});
+class _$EntityImpl implements _Entity {
+  const _$EntityImpl({@notNull this.entityId, @notNull this.name});
 
   @override
-  final int entityId;
+  @notNull
+  final int? entityId;
   @override
-  final String name;
+  @notNull
+  final String? name;
 
   @override
   String toString() {
@@ -111,10 +117,10 @@ class _$_Entity implements _Entity {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_Entity &&
+            other is _$EntityImpl &&
             (identical(other.entityId, entityId) ||
                 other.entityId == entityId) &&
             (identical(other.name, name) || other.name == name));
@@ -126,20 +132,23 @@ class _$_Entity implements _Entity {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$_EntityCopyWith<_$_Entity> get copyWith =>
-      __$$_EntityCopyWithImpl<_$_Entity>(this, _$identity);
+  _$$EntityImplCopyWith<_$EntityImpl> get copyWith =>
+      __$$EntityImplCopyWithImpl<_$EntityImpl>(this, _$identity);
 }
 
 abstract class _Entity implements Entity {
   const factory _Entity(
-      {required final int entityId, required final String name}) = _$_Entity;
+      {@notNull final int? entityId,
+      @notNull final String? name}) = _$EntityImpl;
 
   @override
-  int get entityId;
+  @notNull
+  int? get entityId;
   @override
-  String get name;
+  @notNull
+  String? get name;
   @override
   @JsonKey(ignore: true)
-  _$$_EntityCopyWith<_$_Entity> get copyWith =>
+  _$$EntityImplCopyWith<_$EntityImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

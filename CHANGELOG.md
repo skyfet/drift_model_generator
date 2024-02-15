@@ -1,6 +1,13 @@
+## 0.6.0
+
+- FEAT: add `NotNull` annotation 
+- FEAT: add `assertRequiredOnInsert` method for annotated class instance that checks required values for nulls on inserting
+- FEAT: add `toCompanion` method for annotated class instance
+- BREAKING: using as part directive 
+
 ## 0.5.3
 
-- FEAT: add computed field using `Computed` annotation 
+- FEAT: add computed field using `Computed` annotation
 
 ## 0.5.2
 
