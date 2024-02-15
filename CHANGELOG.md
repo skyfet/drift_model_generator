@@ -1,3 +1,6 @@
+## 0.6.2
+- FIX: do not generate if nothing is annotated
+
 ## 0.6.1
 - FIX: update readme
 

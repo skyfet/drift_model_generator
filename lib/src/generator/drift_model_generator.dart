@@ -16,6 +16,12 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
 
     final fileName = library.element.source.uri.pathSegments.last;
 
+    final elements = library.annotatedWith(TypeChecker.fromRuntime(UseDrift));
+
+    if (elements.isEmpty) {
+      return '';
+    }
+
     buffer.writeln("part of \"$fileName\";");
 
     final generated = await super.generate(library, buildStep);
