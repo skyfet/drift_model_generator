@@ -6,6 +6,10 @@ import 'package:drift_model_generator/src/utils/types.dart';
 import 'package:source_gen/source_gen.dart';
 
 class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
+  DriftModelGenerator({bool? timestampDateTime}) : timestampDateTime = timestampDateTime ?? false;
+
+  final bool timestampDateTime;
+
   // Set<String> additionalImports = {};
 
   @override
@@ -120,7 +124,13 @@ class DriftModelGenerator extends GeneratorForAnnotation<UseDrift> {
       primaryKeys: primaryKeys,
     );
 
-    buffer.writeAll(variablesData.map((vd) => vd.toDriftLine()));
+    buffer.writeAll(
+      variablesData.map(
+        (vd) => vd.toDriftLine(
+          timestampDateTime: timestampDateTime,
+        ),
+      ),
+    );
 
     if (primaryKeys.isNotEmpty) {
       buffer
@@ -452,6 +462,7 @@ class VariableData {
 
   final bool isFieldNullable;
 
+  String get typeName => element.type.getDisplayString(withNullability: false);
   String get name => element.name;
   bool get isEnum => element.type.element is EnumElement?;
   bool get hasDefault => columnDefaultValue != null;
@@ -536,7 +547,11 @@ class VariableData {
     );
   }
 
-  StringBuffer toDriftLine() {
+  StringBuffer toDriftLine({required bool timestampDateTime}) {
+    if (timestampDateTime && columnType == 'DateTimeColumn') {
+      return toCustomTypeLine('TimestampType');
+    }
+
     final buffer = StringBuffer();
 
     buffer
@@ -546,6 +561,68 @@ class VariableData {
       ..write(' => ')
       ..write(builderName)
       ..write('()');
+
+    if (computedSql != null) {
+      buffer
+        ..write('.generatedAs(')
+        ..write('CustomExpression(\'')
+        ..write(computedSql)
+        ..write("'),)();");
+      return buffer;
+    }
+
+    if (hasAutoIncrementMark) {
+      buffer.write('.autoIncrement()();');
+      return buffer;
+    }
+
+    if (columnDefaultValue != null) {
+      buffer
+        ..write('.withDefault(')
+        ..write(
+          columnDefaultValue is String
+              ? ['current_timestamp', 'now()'].contains(columnDefaultValue.toLowerCase())
+                  ? 'currentDateAndTime'
+                  : 'const Constant("$columnDefaultValue")'
+              : 'const Constant($columnDefaultValue)',
+        )
+        ..write(')');
+    }
+
+    if (references.isNotEmpty) {
+      for (var reference in references) {
+        final fieldIndex = reference.fromFields.indexOf(name);
+        buffer
+          ..write('.references(')
+          ..write(reference.toDriftClass)
+          ..write(', #')
+          ..write(reference.toFields.elementAt(fieldIndex))
+          ..write(')');
+      }
+    }
+
+    if (hasUniqueMark) {
+      buffer.write('.unique()');
+    }
+
+    if (isFieldNullable) {
+      buffer.write('.nullable()');
+    }
+
+    buffer.write('();');
+    return buffer;
+  }
+
+  StringBuffer toCustomTypeLine(String customTypeName) {
+    final buffer = StringBuffer();
+
+    buffer
+      ..writeln('Column<$typeName>')
+      ..write(' get ')
+      ..write(name)
+      ..write(' => ')
+      ..write('customType')
+      ..write('(const $customTypeName())');
 
     if (computedSql != null) {
       buffer

@@ -16,8 +16,9 @@ class ExampleRecords extends Table {
   IntColumn get userId => integer().nullable()();
   IntColumn get entityId =>
       integer().references(Entities, #entityId).nullable()();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).nullable()();
+  Column<DateTime> get createdAt => customType(const TimestampType())
+      .withDefault(currentDateAndTime)
+      .nullable()();
   BoolColumn get hasType => boolean().generatedAs(
         CustomExpression('type is not null'),
       )();

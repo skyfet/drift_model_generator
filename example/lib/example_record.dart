@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_model_generator/drift_model_generator.dart';
+import 'package:drift_model_generator/types.dart';
 import 'package:example/db/drift_db.dart';
 import 'package:example/models/entity.dart';
 

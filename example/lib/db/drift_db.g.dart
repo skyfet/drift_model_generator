@@ -448,7 +448,7 @@ class $ExampleRecordsTable extends ExampleRecords
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, true,
-      type: DriftSqlType.dateTime,
+      type: const TimestampType(),
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
   static const VerificationMeta _hasTypeMeta =
@@ -523,7 +523,7 @@ class $ExampleRecordsTable extends ExampleRecords
       userId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}user_id']),
       createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at']),
+          .read(const TimestampType(), data['${effectivePrefix}created_at']),
       hasType: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}has_type'])!,
       entityId: attachedDatabase.typeMapping
@@ -626,7 +626,8 @@ class ExampleRecordsCompanion extends UpdateCompanion<ExampleRecord> {
       map['entity_id'] = Variable<int>(entityId.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] =
+          Variable<DateTime>(createdAt.value, const TimestampType());
     }
     return map;
   }

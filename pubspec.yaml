@@ -1,12 +1,13 @@
 name: drift_model_generator
 description: Dart model based drift model generator.
-version: 0.6.2
+version: 0.6.3
 homepage: https://github.com/skyfet/drift_model_generator
 
 environment:
   sdk: '>=2.17.0 <4.0.0'
 
 dependencies:
+  drift: any
   build: ^2.4.1
   analyzer: ^6.4.1
   source_gen: ^1.5.0

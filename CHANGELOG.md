@@ -1,3 +1,7 @@
+## 0.6.3
+- FEAT: add custom `TimestampType` that can be used for DateTime fields 
+  stored as `timestamp` type in database. Controls with  `timestamp_date_time` builder option
+
 ## 0.6.2
 - FIX: do not generate if nothing is annotated
 

@@ -5,6 +5,9 @@ import 'package:drift_model_generator/src/generator/drift_model_generator.dart';
 import 'package:source_gen/source_gen.dart';
 
 Builder driftClassBuilder(BuilderOptions options) => LibraryBuilder(
-      DriftModelGenerator(),
+      DriftModelGenerator(
+        timestampDateTime: options.config['timestamp_date_time'],
+      ),
       generatedExtension: '.driftm.dart',
+      options: options,
     );

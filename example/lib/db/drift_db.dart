@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:drift_model_generator/types.dart';
 import 'package:example/example_record.dart';
 import 'package:example/models/entity.dart';
 import 'package:example/models/user.dart';

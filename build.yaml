@@ -1,6 +1,6 @@
 builders:
   # name of the builder
-  model_based_drift_class:
+  drift_model_generator:
     import: "package:drift_model_generator/src/builder.dart"
     # Name of the function in the above library to call.
     builder_factories: ["driftClassBuilder"]
