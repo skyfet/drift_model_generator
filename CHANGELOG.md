@@ -1,3 +1,6 @@
+## 0.7.0
+- FIX: add main types export
+
 ## 0.6.3
 - FEAT: add custom `TimestampType` that can be used for DateTime fields 
   stored as `timestamp` type in database. Controls with  `timestamp_date_time` builder option
